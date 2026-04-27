@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package supplychain;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "gen/pb";
+
+message Location {
+  double lat = 1;
+  double lng = 2;
+  string name = 3;
+}
+
+message Shipment {
+  string id = 1;
+  string owner_id = 2;
+  Location origin = 3;
+  Location destination = 4;
+  Location current_location = 5;
+  repeated Location route_points = 6;
+  string status = 7; // IN_TRANSIT,DELAYED,AT_RISK
+  string carrier = 8;
+  google.protobuf.Timestamp estimated_arrival = 9;
+  google.protobuf.Timestamp created_at = 10;
+}
+
+message CreateShipmentRequest {
+  string owner_id = 1;
+  Location origin = 2;
+  Location destination = 3;
+  string carrier = 4;
+  google.protobuf.Timestamp estimated_arrival = 5;
+}
+
+message GetShipmentRequest {
+  string id = 1;
+}
+
+message UpdateShipmentRequest {
+  string id = 1;
+  Location current_location = 2;
+  string status = 3;
+}
+
+message DeleteShipmentRequest {
+  string id = 1;
+}
+
+message DeleteShipmentResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ListShipmentsRequest {
+  string owner_id = 1;
+  string status = 2;
+}
+
+message ListShipmentsResponse {
+  repeated Shipment shipments = 1;
+}
+
+message ShipmentStatusUpdate {
+  string shipment_id = 1;
+  string status = 2;
+  Location current_location = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}
+
+service ShipmentService {
+  //CRUD
+  rpc CreateShipment(CreateShipmentRequest) returns (Shipment);
+  rpc GetShipment(GetShipmentRequest) returns (Shipment);
+  rpc UpdateShipment(UpdateShipmentRequest) returns (Shipment);
+  rpc DeleteShipment(DeleteShipmentRequest) returns (DeleteShipmentResponse);
+  rpc ListShipments(ListShipmentsRequest) returns (ListShipmentsResponse);
+
+  //Streaming
+  rpc TrackShipment(GetShipmentRequest) returns (ShipmentStatusUpdate);
+}

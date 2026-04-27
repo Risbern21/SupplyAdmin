@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package supplychain;
+
+option go_package = "gen/pb";
+
+message RoutePoint {
+  double lat = 1;
+  double lng = 2;
+  string label = 3;
+  int32 sequence = 4;
+}
+
+message Route {
+  string shipment_id = 1;
+  repeated RoutePoint points = 2;
+  double estimated_duration_minutes = 3;
+  double distance_km = 4;
+  string reason = 5;
+}
+
+message OptimizeRouteRequest {
+  string shipment_id = 1;
+  repeated string avoid_types = 2;
+}
+
+message GetRouteRequest {
+  string shipment_id = 1;
+}
+
+service RouteService {
+  rpc OptimizeRoute(OptimizeRouteRequest) returns (Route);
+  rpc GetRoute(GetRouteRequest) returns (Route);
+}
