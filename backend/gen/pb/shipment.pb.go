@@ -688,14 +688,14 @@ const file_proto_shipment_proto_rawDesc = "" +
 	"\x06status\x18\x02 \x01(\tR\x06status\x12@\n" +
 	"\x10current_location\x18\x03 \x01(\v2\x15.supplychain.LocationR\x0fcurrentLocation\x129\n" +
 	"\n" +
-	"updated_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt2\xfa\x03\n" +
+	"updated_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt2\xfc\x03\n" +
 	"\x0fShipmentService\x12K\n" +
 	"\x0eCreateShipment\x12\".supplychain.CreateShipmentRequest\x1a\x15.supplychain.Shipment\x12E\n" +
 	"\vGetShipment\x12\x1f.supplychain.GetShipmentRequest\x1a\x15.supplychain.Shipment\x12K\n" +
 	"\x0eUpdateShipment\x12\".supplychain.UpdateShipmentRequest\x1a\x15.supplychain.Shipment\x12Y\n" +
 	"\x0eDeleteShipment\x12\".supplychain.DeleteShipmentRequest\x1a#.supplychain.DeleteShipmentResponse\x12V\n" +
-	"\rListShipments\x12!.supplychain.ListShipmentsRequest\x1a\".supplychain.ListShipmentsResponse\x12S\n" +
-	"\rTrackShipment\x12\x1f.supplychain.GetShipmentRequest\x1a!.supplychain.ShipmentStatusUpdateB\bZ\x06gen/pbb\x06proto3"
+	"\rListShipments\x12!.supplychain.ListShipmentsRequest\x1a\".supplychain.ListShipmentsResponse\x12U\n" +
+	"\rTrackShipment\x12\x1f.supplychain.GetShipmentRequest\x1a!.supplychain.ShipmentStatusUpdate0\x01B\bZ\x06gen/pbb\x06proto3"
 
 var (
 	file_proto_shipment_proto_rawDescOnce sync.Once

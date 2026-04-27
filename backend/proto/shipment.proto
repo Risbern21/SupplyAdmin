@@ -77,5 +77,5 @@ service ShipmentService {
   rpc ListShipments(ListShipmentsRequest) returns (ListShipmentsResponse);
 
   //Streaming
-  rpc TrackShipment(GetShipmentRequest) returns (ShipmentStatusUpdate);
+  rpc TrackShipment(GetShipmentRequest) returns (stream ShipmentStatusUpdate);
 }
