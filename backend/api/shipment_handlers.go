@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 
+	"cloud.google.com/go/firestore"
 	"github.com/google/uuid"
 	"github.com/risbern21/SupplyAdmin/gen/pb"
 	"github.com/risbern21/SupplyAdmin/store"
@@ -12,11 +13,13 @@ import (
 type ShipmentHandler struct {
 	pb.UnimplementedShipmentServiceServer
 	store store.Storer
+	db    *firestore.Client
 }
 
-func NewShipmentHandler(s store.Storer) *ShipmentHandler {
+func NewShipmentHandler(s store.Storer, db *firestore.Client) *ShipmentHandler {
 	return &ShipmentHandler{
 		store: s,
+		db:    db,
 	}
 }
 
@@ -71,6 +74,6 @@ func (h *ShipmentHandler) ListShipments(ctx context.Context, req *pb.ListShipmen
 	return s, nil
 }
 
-func (h *ShipmentHandler) TrackShipment(*pb.GetShipmentRequest, grpc.ServerStreamingServer[pb.ShipmentStatusUpdate]) error {
-	return nil
+func (h *ShipmentHandler) TrackShipment(req *pb.GetShipmentRequest, stream grpc.ServerStreamingServer[pb.ShipmentStatusUpdate]) error {
+	return h.store.TrackShipment(stream, req.Id)
 }

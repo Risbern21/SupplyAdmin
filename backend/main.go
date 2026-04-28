@@ -22,7 +22,7 @@ func main() {
 		log.Fatalf("unable to listen on port 8080 : %v", err)
 	}
 
-	grpcServer := api.NewServer(s)
+	grpcServer := api.NewServer(s, db.Client())
 	log.Println("server running on port : 8080")
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to server server %v", err)

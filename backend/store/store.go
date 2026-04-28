@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/risbern21/SupplyAdmin/gen/pb"
+	"google.golang.org/grpc"
 )
 
 type Storer interface {
@@ -16,4 +17,6 @@ type Storer interface {
 	GetRoute(ctx context.Context, shipmentID string) (*pb.Route, error)
 	AddDisruptionRisk(ctx context.Context, disruptionRisk *pb.DisruptionRisk) error
 	ListDisruptions(ctx context.Context) ([]*pb.DisruptionRisk, error)
+
+	TrackShipment(stream grpc.ServerStreamingServer[pb.ShipmentStatusUpdate], shipmentID string) error
 }

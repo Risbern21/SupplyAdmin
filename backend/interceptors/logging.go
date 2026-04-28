@@ -31,3 +31,27 @@ func UnaryLoggingInterceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 		return res, err
 	}
 }
+
+func StreamLoggingInterceptor(logger *zap.Logger) grpc.StreamServerInterceptor {
+	return func(
+		srv any,
+		ss grpc.ServerStream,
+		info *grpc.StreamServerInfo,
+		handler grpc.StreamHandler,
+	) error {
+		start := time.Now()
+
+		err := handler(srv, ss)
+
+		logger.Info("gRPC stream",
+			zap.String("method", info.FullMethod),
+			zap.Duration("duration", time.Since(start)),
+			zap.String("status", status.Code(err).String()),
+			zap.Bool("is_client_stream", info.IsClientStream),
+			zap.Bool("is_server_stream", info.IsServerStream),
+			zap.Error(err),
+		)
+
+		return err
+	}
+}

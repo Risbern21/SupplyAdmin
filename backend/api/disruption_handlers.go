@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 
+	"cloud.google.com/go/firestore"
 	"github.com/risbern21/SupplyAdmin/gen/pb"
 	"github.com/risbern21/SupplyAdmin/store"
 	"google.golang.org/grpc"
@@ -11,11 +12,13 @@ import (
 type DisruptionHandler struct {
 	pb.UnimplementedDisruptionServiceServer
 	store store.Storer
+	db    *firestore.Client
 }
 
-func NewDisruptionHandler(s store.Storer) *DisruptionHandler {
+func NewDisruptionHandler(s store.Storer, db *firestore.Client) *DisruptionHandler {
 	return &DisruptionHandler{
 		store: s,
+		db:    db,
 	}
 }
 

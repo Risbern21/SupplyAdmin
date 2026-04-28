@@ -6,6 +6,7 @@ import (
 
 	"cloud.google.com/go/firestore"
 	"github.com/risbern21/SupplyAdmin/gen/pb"
+	"google.golang.org/grpc"
 )
 
 type FirebaseStore struct {
@@ -220,4 +221,40 @@ func (s *FirebaseStore) AddDisruptionRisk(ctx context.Context, disruptionRisk *p
 
 func (s *FirebaseStore) ListDisruptions(ctx context.Context) ([]*pb.DisruptionRisk, error) {
 	return nil, nil
+}
+
+// TrackShipment for streaming shipment updates
+func (s *FirebaseStore) TrackShipment(stream grpc.ServerStreamingServer[pb.ShipmentStatusUpdate], shipmentID string) error {
+	coll := s.db.Collection("shipments")
+	docs, err := coll.
+		Where("Id", "==", shipmentID).
+		Limit(1).
+		Documents(stream.Context()).
+		GetAll()
+	if err != nil || len(docs) == 0 {
+		return fmt.Errorf("shipment not found")
+	}
+
+	snapshots := docs[0].Ref.Snapshots(stream.Context())
+
+	for {
+		snap, err := snapshots.Next()
+		if err != nil {
+			return err
+		}
+
+		shipmentData := new(pb.Shipment)
+		if err := snap.DataTo(shipmentData); err != nil {
+			return err
+		}
+
+		err = stream.Send(&pb.ShipmentStatusUpdate{
+			ShipmentId:      shipmentData.Id,
+			Status:          shipmentData.Status,
+			CurrentLocation: shipmentData.CurrentLocation,
+		})
+		if err != nil {
+			return err
+		}
+	}
 }
