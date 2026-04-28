@@ -1,38 +1,64 @@
-from ml.api.predict import predict_risk
-from ml.api.route_optimizer import optimize_route
+"""
+ML gRPC Server — Entry Point
 
-sample_input = {
-    "weather_severity": 0.9,
-    "traffic_density": 0.8,
-    "route_congestion": 0.7,
-    "distance_remaining": 200,
-    "time_of_day": 18,
-    "day_of_week": 3,
-    "vehicle_speed": 35,
-}
+Starts a Python gRPC server on port 50051 serving the MLService
+(risk prediction, route optimization, Gemini disruption analysis).
+"""
 
-risk = predict_risk(sample_input)
+import logging
+import os
+import signal
+import sys
+from concurrent import futures
+from pathlib import Path
 
-print(f"Predicted Risk: {risk:.2f}")
+import grpc
+from dotenv import load_dotenv
 
-if risk > 0.7:
-    print(" High risk! Suggest rerouting.")
-else:
-    print("Route is safe.")
+# Load .env from the ml/ directory
+load_dotenv(Path(__file__).resolve().parent / ".env")
+
+# Ensure project root is on sys.path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
+from ml.gen import ml_service_pb2_grpc
+from ml.services.prediction_service import MLServiceServicer
+
+PORT = os.environ.get("ML_SERVICE_PORT", "50051")
+MAX_WORKERS = int(os.environ.get("ML_MAX_WORKERS", "10"))
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
+)
+logger = logging.getLogger("ml.server")
 
 
-routes = [
-    {"route_id": "A", "distance": 120, "traffic": 0.8, "weather": 0.7},
-    {"route_id": "B", "distance": 140, "traffic": 0.4, "weather": 0.3},
-    {"route_id": "C", "distance": 160, "traffic": 0.3, "weather": 0.2},
-]
+def serve():
+    """Create, configure, and run the gRPC server."""
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=MAX_WORKERS))
 
-best, all_routes = optimize_route(routes)
+    ml_service_pb2_grpc.add_MLServiceServicer_to_server(
+        MLServiceServicer(), server
+    )
 
-print("\nAll Routes:")
-for r in all_routes:
-    print(r)
+    server.add_insecure_port(f"[::]:{PORT}")
+    server.start()
 
-print("\nBest Route Selected:")
-print(best)
+    logger.info("🚀 ML gRPC server listening on port %s", PORT)
 
+    # Graceful shutdown on SIGTERM / SIGINT
+    stop_event = server.wait_for_termination
+
+    def _shutdown(signum, frame):
+        logger.info("Received signal %s — shutting down gracefully…", signum)
+        server.stop(grace=5)
+
+    signal.signal(signal.SIGTERM, _shutdown)
+    signal.signal(signal.SIGINT, _shutdown)
+
+    stop_event()
+
+
+if __name__ == "__main__":
+    serve()

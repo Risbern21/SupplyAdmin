@@ -1,0 +1,8 @@
+grpcio>=1.72.0
+grpcio-tools>=1.72.0
+google-genai>=1.14.0
+python-dotenv>=1.0.0
+numpy
+pandas
+scikit-learn
+joblib
