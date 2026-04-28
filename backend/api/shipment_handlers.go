@@ -38,6 +38,25 @@ func (h *ShipmentHandler) CreateShipment(ctx context.Context, req *pb.CreateShip
 	if err := h.store.SaveShipment(ctx, s); err != nil {
 		return nil, err
 	}
+
+	route := &pb.Route{
+		ShipmentId: s.Id,
+		Points: []*pb.RoutePoint{
+			{
+				Lat:      s.Origin.Lat,
+				Lng:      s.Origin.Lng,
+				Label:    "origin",
+				Sequence: 1,
+			},
+		},
+		EstimatedDurationMinutes: (float64(s.EstimatedArrival.Seconds) + float64(s.EstimatedArrival.Nanos)/1e9) / 60,
+		DistanceKm:               0,
+		Reason:                   "",
+	}
+	if err := h.store.AddRoute(ctx, route); err != nil {
+		return nil, err
+	}
+
 	return s, nil
 }
 

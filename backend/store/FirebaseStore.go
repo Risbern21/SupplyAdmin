@@ -193,7 +193,7 @@ func (s *FirebaseStore) AddRoute(ctx context.Context, route *pb.Route) error {
 func (s *FirebaseStore) GetRoute(ctx context.Context, shipmentID string) (*pb.Route, error) {
 	coll := s.db.Collection("routes")
 	docs, err := coll.
-		Where("Id", "==", shipmentID).
+		Where("ShipmentId", "==", shipmentID).
 		Limit(1).
 		Documents(ctx).
 		GetAll()

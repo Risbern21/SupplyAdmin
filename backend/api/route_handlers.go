@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 
 	"cloud.google.com/go/firestore"
 	"github.com/risbern21/SupplyAdmin/gen/pb"
@@ -27,22 +26,10 @@ func (h *RouteHandler) OptimizeRoute(ctx context.Context, req *pb.OptimizeRouteR
 }
 
 func (h *RouteHandler) GetRoute(ctx context.Context, req *pb.GetRouteRequest) (*pb.Route, error) {
-	coll := h.db.Collection("routes")
-	docs, err := coll.
-		Where("ShipmentId", "==", req.ShipmentId).
-		Documents(ctx).
-		GetAll()
-
-	if err != nil || len(docs) == 0 {
-		return nil, fmt.Errorf("shipment not found")
-	}
-
-	route := new(pb.Route)
-	if err := docs[0].DataTo(route); err != nil {
+	route, err := h.store.GetRoute(ctx, req.ShipmentId)
+	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println(route)
 
 	return route, nil
 }

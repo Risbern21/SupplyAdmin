@@ -8,7 +8,7 @@ sample_input = {
     "distance_remaining": 200,
     "time_of_day": 18,
     "day_of_week": 3,
-    "vehicle_speed": 35
+    "vehicle_speed": 35,
 }
 
 risk = predict_risk(sample_input)
@@ -24,7 +24,7 @@ else:
 routes = [
     {"route_id": "A", "distance": 120, "traffic": 0.8, "weather": 0.7},
     {"route_id": "B", "distance": 140, "traffic": 0.4, "weather": 0.3},
-    {"route_id": "C", "distance": 160, "traffic": 0.3, "weather": 0.2}
+    {"route_id": "C", "distance": 160, "traffic": 0.3, "weather": 0.2},
 ]
 
 best, all_routes = optimize_route(routes)
@@ -35,3 +35,4 @@ for r in all_routes:
 
 print("\nBest Route Selected:")
 print(best)
+

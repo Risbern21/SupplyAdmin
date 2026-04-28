@@ -40,6 +40,11 @@ func StreamLoggingInterceptor(logger *zap.Logger) grpc.StreamServerInterceptor {
 		handler grpc.StreamHandler,
 	) error {
 		start := time.Now()
+		logger.Info("gRPC stream started",
+			zap.String("method", info.FullMethod),
+			zap.Bool("is_client_stream", info.IsClientStream),
+			zap.Bool("is_server_stream", info.IsServerStream),
+		)
 
 		err := handler(srv, ss)
 
