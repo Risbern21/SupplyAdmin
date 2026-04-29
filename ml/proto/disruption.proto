@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package supplychain;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "gen/pb";
+
+message DisruptionRisk {
+  string shipment_id = 1;
+  string type = 2;
+  string severity = 3;
+  string description = 4;
+  google.protobuf.Timestamp detected_at = 5;
+}
+
+message AnalyzeShipmentRequest {
+  string shipment_id = 1;
+  string current_conditions = 2;
+  string cargo_type = 3;
+}
+
+message AnalyzeShipmentResponse {
+  string shipment_id = 1;
+  string summary = 4;
+  string risk_level = 5; // LOW | MEDIUM | HIGH | CRITICAL
+  repeated string suggested_actions = 6;
+  string detailed_analysis = 7;
+}
+
+message ListDisruptionsRequest {
+  optional string severity = 2;
+}
+
+message ListDisruptionsResponse {
+  repeated DisruptionRisk disruptions = 1;
+}
+
+message WatchDisruptionsRequest {}
+
+message WatchDisruptionsResponse {
+  string shipment_id = 1;
+  DisruptionRisk risk = 2;
+  string suggested_action = 3;
+  google.protobuf.Timestamp alert_time = 4;
+}
+
+service DisruptionService {
+  rpc AnalyzeShipment(AnalyzeShipmentRequest) returns (AnalyzeShipmentResponse);
+  rpc ListDisruptions(ListDisruptionsRequest) returns (ListDisruptionsResponse);
+  rpc WatchDisruptions(WatchDisruptionsRequest) returns (stream WatchDisruptionsResponse);
+}
+
+//
+// message AnalyzeDisruptionRequest {
+//   string shipment_id = 1;
+//   string origin = 2;
+//   string destination = 3;
+//   string cargo_type = 4;
+//   string current_conditions = 5;
+// }
+//
+// message AnalyzeDisruptionResponse {
+//   string summary = 1;
+//   string risk_level = 2; // LOW | MEDIUM | HIGH | CRITICAL
+//   repeated string suggested_actions = 3;
+//   string detailed_analysis = 4;
+// }

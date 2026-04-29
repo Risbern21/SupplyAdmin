@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+package supplychain;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "gen/pb";
+
+message Location {
+  double lat = 1;
+  double lng = 2;
+  string name = 3;
+}
+
+message Shipment {
+  string id = 1;
+  string owner_id = 2;
+  Location origin = 3;
+  Location destination = 4;
+  Location current_location = 5;
+  repeated Location route_points = 6;
+  string status = 7; // IN_TRANSIT,DELAYED,AT_RISK
+  string carrier = 8;
+  string cargo_type = 9;
+  google.protobuf.Timestamp estimated_arrival = 10;
+  google.protobuf.Timestamp created_at = 11;
+}
+
+message CreateShipmentRequest {
+  Location origin = 2;
+  Location destination = 3;
+  string carrier = 4;
+  string cargo_type = 5;
+  google.protobuf.Timestamp estimated_arrival = 6;
+}
+
+message GetShipmentRequest {
+  string id = 1;
+}
+
+message UpdateShipmentRequest {
+  string id = 1;
+  Location current_location = 2;
+  string status = 3;
+}
+
+message DeleteShipmentRequest {
+  string id = 1;
+}
+
+message DeleteShipmentResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ListShipmentsRequest {
+  string status = 2;
+}
+
+message ListShipmentsResponse {
+  repeated Shipment shipments = 1;
+}
+
+message PredictRiskRequest {
+  string id = 1;
+  double weather_severity = 2;
+  double traffic_density = 3;
+  double route_congestion = 4;
+  double distance_remaining = 5;
+  double time_of_day = 6;
+  double day_of_week = 7;
+  double vehicle_speed = 8;
+}
+
+message PredictRiskResponse {
+  double risk_score = 1; // 0.0 – 1.0 probability
+  string risk_level = 2; // LOW | MEDIUM | HIGH
+}
+
+message TrackShipmentRequest {
+  string id = 1;
+}
+
+message TrackShipmentResponse {
+  string shipment_id = 1;
+  string status = 2;
+  Location current_location = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}
+
+service ShipmentService {
+  //CRUD
+  rpc CreateShipment(CreateShipmentRequest) returns (Shipment);
+  rpc GetShipment(GetShipmentRequest) returns (Shipment);
+  rpc UpdateShipment(UpdateShipmentRequest) returns (Shipment);
+  rpc DeleteShipment(DeleteShipmentRequest) returns (DeleteShipmentResponse);
+  rpc ListShipments(ListShipmentsRequest) returns (ListShipmentsResponse);
+
+  //Prediction
+  rpc PredictRisk(PredictRiskRequest) returns (PredictRiskResponse);
+
+  //Streaming
+  rpc TrackShipment(TrackShipmentRequest) returns (stream TrackShipmentResponse);
+}

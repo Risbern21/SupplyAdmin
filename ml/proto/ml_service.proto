@@ -1,78 +1,11 @@
 syntax = "proto3";
 
+// MLService is now a thin orchestration layer.
+// PredictRisk     → ShipmentService  (shipment.proto)
+// OptimizeRoute   → RouteService     (route.proto)
+// AnalyzeShipment → DisruptionService (disruption.proto)
+//
+// This file is kept for any future ML-only primitives.
 package mlservice;
 
 option go_package = "gen/pb";
-
-// ─── PredictRisk ────────────────────────────────────────────────────────────
-
-message PredictRiskRequest {
-  double weather_severity = 1;
-  double traffic_density = 2;
-  double route_congestion = 3;
-  double distance_remaining = 4;
-  double time_of_day = 5;
-  double day_of_week = 6;
-  double vehicle_speed = 7;
-}
-
-message PredictRiskResponse {
-  double risk_score = 1;         // 0.0 – 1.0 probability
-  string risk_level = 2;         // LOW | MEDIUM | HIGH
-}
-
-// ─── OptimizeRoute ──────────────────────────────────────────────────────────
-
-message MLRouteCandidate {
-  string route_id = 1;
-  double distance = 2;
-  double traffic = 3;
-  double weather = 4;
-}
-
-message MLRouteResult {
-  string route_id = 1;
-  double distance = 2;
-  double traffic = 3;
-  double weather = 4;
-  double risk_score = 5;
-}
-
-message MLOptimizeRouteRequest {
-  repeated MLRouteCandidate candidates = 1;
-}
-
-message MLOptimizeRouteResponse {
-  MLRouteResult best_route = 1;
-  repeated MLRouteResult all_routes = 2;
-}
-
-// ─── AnalyzeDisruption (Gemini 2.5 Flash) ───────────────────────────────────
-
-message AnalyzeDisruptionRequest {
-  string shipment_id = 1;
-  string origin = 2;
-  string destination = 3;
-  string cargo_type = 4;
-  string current_conditions = 5; // free-text context for Gemini
-}
-
-message AnalyzeDisruptionResponse {
-  string summary = 1;
-  string risk_level = 2;                   // LOW | MEDIUM | HIGH | CRITICAL
-  repeated string suggested_actions = 3;
-  string detailed_analysis = 4;
-}
-
-// ─── Service ────────────────────────────────────────────────────────────────
-
-service MLService {
-  // Uses the trained RandomForest model to predict disruption risk
-  rpc PredictRisk(PredictRiskRequest) returns (PredictRiskResponse);
-
-  // Scores multiple route candidates and returns the safest one
-  rpc OptimizeRoute(MLOptimizeRouteRequest) returns (MLOptimizeRouteResponse);
-
-  // Uses Gemini 2.5 Flash to analyze supply chain disruptions
-  rpc AnalyzeDisruption(AnalyzeDisruptionRequest) returns (AnalyzeDisruptionResponse);
-}

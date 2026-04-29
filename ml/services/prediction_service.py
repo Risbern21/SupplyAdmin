@@ -1,31 +1,36 @@
 """
-gRPC servicer implementing the MLService defined in ml_service.proto.
+gRPC servicers for the ML layer.
 
-Bridges the existing RandomForest model and Gemini 2.5 Flash into gRPC RPCs.
+Three servicers map to the three proto services:
+  - ShipmentServiceServicer  → PredictRisk  (shipment.proto)
+  - RouteServiceServicer     → OptimizeRoute (route.proto)
+  - DisruptionServiceServicer→ AnalyzeShipment (disruption.proto)
 """
 
 import logging
 import sys
 import os
 
-# Ensure project root is on the path so `ml.*` imports work
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from ml.api.predict import predict_risk
 from ml.api.route_optimizer import optimize_route
-from ml.gen import ml_service_pb2, ml_service_pb2_grpc
 from ml.services.gemini_service import analyze_disruption
+from ml.gen import (
+    shipment_pb2, shipment_pb2_grpc,
+    route_pb2, route_pb2_grpc,
+    disruption_pb2, disruption_pb2_grpc,
+)
 
 logger = logging.getLogger(__name__)
 
 
-class MLServiceServicer(ml_service_pb2_grpc.MLServiceServicer):
-    """Implements the MLService gRPC interface."""
+# ── ShipmentService → PredictRisk ────────────────────────────────────────────
 
-    # ── PredictRisk ──────────────────────────────────────────────────────
+class ShipmentServiceServicer(shipment_pb2_grpc.ShipmentServiceServicer):
 
     def PredictRisk(self, request, context):
-        """Run the trained RandomForest model and return a risk score."""
+        """Run the RandomForest model and return a risk score."""
         input_data = {
             "weather_severity": request.weather_severity,
             "traffic_density": request.traffic_density,
@@ -38,7 +43,6 @@ class MLServiceServicer(ml_service_pb2_grpc.MLServiceServicer):
 
         risk_score = predict_risk(input_data)
 
-        # Classify
         if risk_score >= 0.7:
             risk_level = "HIGH"
         elif risk_score >= 0.4:
@@ -46,65 +50,80 @@ class MLServiceServicer(ml_service_pb2_grpc.MLServiceServicer):
         else:
             risk_level = "LOW"
 
-        logger.info("PredictRisk → score=%.4f level=%s", risk_score, risk_level)
+        logger.info("PredictRisk [id=%s] → score=%.4f level=%s",
+                    request.id, risk_score, risk_level)
 
-        return ml_service_pb2.PredictRiskResponse(
+        return shipment_pb2.PredictRiskResponse(
             risk_score=risk_score,
             risk_level=risk_level,
         )
 
-    # ── OptimizeRoute ────────────────────────────────────────────────────
+
+# ── RouteService → OptimizeRoute ─────────────────────────────────────────────
+
+class RouteServiceServicer(route_pb2_grpc.RouteServiceServicer):
 
     def OptimizeRoute(self, request, context):
-        """Score each route candidate and return the safest one."""
+        """Score each Route candidate and return the safest one."""
         routes = []
-        for c in request.candidates:
-            routes.append(
-                {
-                    "route_id": c.route_id,
-                    "distance": c.distance,
-                    "traffic": c.traffic,
-                    "weather": c.weather,
-                }
-            )
+        for r in request.route_candidates:
+            routes.append({
+                "route_id": r.shipment_id,  # use shipment_id as identifier
+                "distance": r.distance_km,
+                "traffic": float(r.traffic) if r.traffic else 0.5,
+                "weather": float(r.weather) if r.weather else 0.5,
+            })
 
         best, all_scored = optimize_route(routes)
 
-        def _to_result(r):
-            return ml_service_pb2.MLRouteResult(
-                route_id=r["route_id"],
-                distance=r["distance"],
-                traffic=r["traffic"],
-                weather=r["weather"],
-                risk_score=r["risk_score"],
+        def _to_route(scored, original):
+            return route_pb2.Route(
+                shipment_id=original.shipment_id,
+                points=original.points,
+                estimated_duration_minutes=original.estimated_duration_minutes,
+                distance_km=original.distance_km,
+                reason=f"risk_score={scored['risk_score']:.4f}",
+                traffic=original.traffic,
+                weather=original.weather,
             )
 
-        logger.info("OptimizeRoute → best=%s", best["route_id"])
+        # Match scored results back to original Route objects by shipment_id
+        original_map = {r.shipment_id: r for r in request.route_candidates}
+        best_original = original_map.get(best["route_id"],
+                                         request.route_candidates[0])
 
-        return ml_service_pb2.MLOptimizeRouteResponse(
-            best_route=_to_result(best),
-            all_routes=[_to_result(r) for r in all_scored],
+        logger.info("OptimizeRoute [shipment=%s] → best=%s",
+                    request.shipment_id, best["route_id"])
+
+        return route_pb2.OptimizeRouteResponse(
+            shipment_id=request.shipment_id,
+            best_route=_to_route(best, best_original),
         )
 
-    # ── AnalyzeDisruption (Gemini 2.5 Flash) ─────────────────────────────
+    def GetRoute(self, request, context):
+        # Pass-through — data layer not managed by ML service
+        return route_pb2.Route(shipment_id=request.shipment_id)
 
-    def AnalyzeDisruption(self, request, context):
-        """Delegate to Gemini 2.5 Flash for intelligent disruption analysis."""
+
+# ── DisruptionService → AnalyzeShipment ──────────────────────────────────────
+
+class DisruptionServiceServicer(disruption_pb2_grpc.DisruptionServiceServicer):
+
+    def AnalyzeShipment(self, request, context):
+        """Use Gemini 2.5 Flash to analyze a shipment's disruption risk."""
         result = analyze_disruption(
             shipment_id=request.shipment_id,
-            origin=request.origin,
-            destination=request.destination,
+            origin="",           # not in updated proto; Gemini uses conditions
+            destination="",
             cargo_type=request.cargo_type,
             current_conditions=request.current_conditions,
         )
 
-        logger.info(
-            "AnalyzeDisruption → shipment=%s risk=%s",
-            request.shipment_id,
-            result["risk_level"],
-        )
+        logger.info("AnalyzeShipment [shipment=%s] → risk=%s",
+                    request.shipment_id, result["risk_level"])
 
-        return ml_service_pb2.AnalyzeDisruptionResponse(
+        return disruption_pb2.AnalyzeShipmentResponse(
+            shipment_id=request.shipment_id,
             summary=result["summary"],
             risk_level=result["risk_level"],
             suggested_actions=result["suggested_actions"],

@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10ml_service.proto\x12\tmlservice\"\xbe\x01\n\x12PredictRiskRequest\x12\x18\n\x10weather_severity\x18\x01 \x01(\x01\x12\x17\n\x0ftraffic_density\x18\x02 \x01(\x01\x12\x18\n\x10route_congestion\x18\x03 \x01(\x01\x12\x1a\n\x12\x64istance_remaining\x18\x04 \x01(\x01\x12\x13\n\x0btime_of_day\x18\x05 \x01(\x01\x12\x13\n\x0b\x64\x61y_of_week\x18\x06 \x01(\x01\x12\x15\n\rvehicle_speed\x18\x07 \x01(\x01\"=\n\x13PredictRiskResponse\x12\x12\n\nrisk_score\x18\x01 \x01(\x01\x12\x12\n\nrisk_level\x18\x02 \x01(\t\"X\n\x10MLRouteCandidate\x12\x10\n\x08route_id\x18\x01 \x01(\t\x12\x10\n\x08\x64istance\x18\x02 \x01(\x01\x12\x0f\n\x07traffic\x18\x03 \x01(\x01\x12\x0f\n\x07weather\x18\x04 \x01(\x01\"i\n\rMLRouteResult\x12\x10\n\x08route_id\x18\x01 \x01(\t\x12\x10\n\x08\x64istance\x18\x02 \x01(\x01\x12\x0f\n\x07traffic\x18\x03 \x01(\x01\x12\x0f\n\x07weather\x18\x04 \x01(\x01\x12\x12\n\nrisk_score\x18\x05 \x01(\x01\"I\n\x16MLOptimizeRouteRequest\x12/\n\ncandidates\x18\x01 \x03(\x0b\x32\x1b.mlservice.MLRouteCandidate\"u\n\x17MLOptimizeRouteResponse\x12,\n\nbest_route\x18\x01 \x01(\x0b\x32\x18.mlservice.MLRouteResult\x12,\n\nall_routes\x18\x02 \x03(\x0b\x32\x18.mlservice.MLRouteResult\"\x84\x01\n\x18\x41nalyzeDisruptionRequest\x12\x13\n\x0bshipment_id\x18\x01 \x01(\t\x12\x0e\n\x06origin\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65stination\x18\x03 \x01(\t\x12\x12\n\ncargo_type\x18\x04 \x01(\t\x12\x1a\n\x12\x63urrent_conditions\x18\x05 \x01(\t\"v\n\x19\x41nalyzeDisruptionResponse\x12\x0f\n\x07summary\x18\x01 \x01(\t\x12\x12\n\nrisk_level\x18\x02 \x01(\t\x12\x19\n\x11suggested_actions\x18\x03 \x03(\t\x12\x19\n\x11\x64\x65tailed_analysis\x18\x04 \x01(\t2\x91\x02\n\tMLService\x12L\n\x0bPredictRisk\x12\x1d.mlservice.PredictRiskRequest\x1a\x1e.mlservice.PredictRiskResponse\x12V\n\rOptimizeRoute\x12!.mlservice.MLOptimizeRouteRequest\x1a\".mlservice.MLOptimizeRouteResponse\x12^\n\x11\x41nalyzeDisruption\x12#.mlservice.AnalyzeDisruptionRequest\x1a$.mlservice.AnalyzeDisruptionResponseB\x08Z\x06gen/pbb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10ml_service.proto\x12\tmlserviceB\x08Z\x06gen/pbb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,22 +32,4 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'ml_service_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z\006gen/pb'
-  _globals['_PREDICTRISKREQUEST']._serialized_start=32
-  _globals['_PREDICTRISKREQUEST']._serialized_end=222
-  _globals['_PREDICTRISKRESPONSE']._serialized_start=224
-  _globals['_PREDICTRISKRESPONSE']._serialized_end=285
-  _globals['_MLROUTECANDIDATE']._serialized_start=287
-  _globals['_MLROUTECANDIDATE']._serialized_end=375
-  _globals['_MLROUTERESULT']._serialized_start=377
-  _globals['_MLROUTERESULT']._serialized_end=482
-  _globals['_MLOPTIMIZEROUTEREQUEST']._serialized_start=484
-  _globals['_MLOPTIMIZEROUTEREQUEST']._serialized_end=557
-  _globals['_MLOPTIMIZEROUTERESPONSE']._serialized_start=559
-  _globals['_MLOPTIMIZEROUTERESPONSE']._serialized_end=676
-  _globals['_ANALYZEDISRUPTIONREQUEST']._serialized_start=679
-  _globals['_ANALYZEDISRUPTIONREQUEST']._serialized_end=811
-  _globals['_ANALYZEDISRUPTIONRESPONSE']._serialized_start=813
-  _globals['_ANALYZEDISRUPTIONRESPONSE']._serialized_end=931
-  _globals['_MLSERVICE']._serialized_start=934
-  _globals['_MLSERVICE']._serialized_end=1207
 # @@protoc_insertion_point(module_scope)
