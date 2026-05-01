@@ -99,10 +99,12 @@ func (x *DisruptionRisk) GetDetectedAt() *timestamppb.Timestamp {
 }
 
 type AnalyzeShipmentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ShipmentId    string                 `protobuf:"bytes,1,opt,name=shipment_id,json=shipmentId,proto3" json:"shipment_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	ShipmentId        string                 `protobuf:"bytes,1,opt,name=shipment_id,json=shipmentId,proto3" json:"shipment_id,omitempty"`
+	CurrentConditions string                 `protobuf:"bytes,2,opt,name=current_conditions,json=currentConditions,proto3" json:"current_conditions,omitempty"`
+	CargoType         string                 `protobuf:"bytes,3,opt,name=cargo_type,json=cargoType,proto3" json:"cargo_type,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *AnalyzeShipmentRequest) Reset() {
@@ -142,13 +144,29 @@ func (x *AnalyzeShipmentRequest) GetShipmentId() string {
 	return ""
 }
 
+func (x *AnalyzeShipmentRequest) GetCurrentConditions() string {
+	if x != nil {
+		return x.CurrentConditions
+	}
+	return ""
+}
+
+func (x *AnalyzeShipmentRequest) GetCargoType() string {
+	if x != nil {
+		return x.CargoType
+	}
+	return ""
+}
+
 type AnalyzeShipmentResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ShipmentId    string                 `protobuf:"bytes,1,opt,name=shipment_id,json=shipmentId,proto3" json:"shipment_id,omitempty"`
-	Risks         []*DisruptionRisk      `protobuf:"bytes,2,rep,name=risks,proto3" json:"risks,omitempty"`
-	Rerouted      bool                   `protobuf:"varint,3,opt,name=rerouted,proto3" json:"rerouted,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	ShipmentId       string                 `protobuf:"bytes,1,opt,name=shipment_id,json=shipmentId,proto3" json:"shipment_id,omitempty"`
+	Summary          string                 `protobuf:"bytes,4,opt,name=summary,proto3" json:"summary,omitempty"`
+	RiskLevel        string                 `protobuf:"bytes,5,opt,name=risk_level,json=riskLevel,proto3" json:"risk_level,omitempty"` // LOW | MEDIUM | HIGH | CRITICAL
+	SuggestedActions []string               `protobuf:"bytes,6,rep,name=suggested_actions,json=suggestedActions,proto3" json:"suggested_actions,omitempty"`
+	DetailedAnalysis string                 `protobuf:"bytes,7,opt,name=detailed_analysis,json=detailedAnalysis,proto3" json:"detailed_analysis,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *AnalyzeShipmentResponse) Reset() {
@@ -188,23 +206,37 @@ func (x *AnalyzeShipmentResponse) GetShipmentId() string {
 	return ""
 }
 
-func (x *AnalyzeShipmentResponse) GetRisks() []*DisruptionRisk {
+func (x *AnalyzeShipmentResponse) GetSummary() string {
 	if x != nil {
-		return x.Risks
+		return x.Summary
+	}
+	return ""
+}
+
+func (x *AnalyzeShipmentResponse) GetRiskLevel() string {
+	if x != nil {
+		return x.RiskLevel
+	}
+	return ""
+}
+
+func (x *AnalyzeShipmentResponse) GetSuggestedActions() []string {
+	if x != nil {
+		return x.SuggestedActions
 	}
 	return nil
 }
 
-func (x *AnalyzeShipmentResponse) GetRerouted() bool {
+func (x *AnalyzeShipmentResponse) GetDetailedAnalysis() string {
 	if x != nil {
-		return x.Rerouted
+		return x.DetailedAnalysis
 	}
-	return false
+	return ""
 }
 
 type ListDisruptionsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Severity      *string                `protobuf:"bytes,1,opt,name=severity,proto3,oneof" json:"severity,omitempty"`
+	Severity      *string                `protobuf:"bytes,2,opt,name=severity,proto3,oneof" json:"severity,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -292,7 +324,6 @@ func (x *ListDisruptionsResponse) GetDisruptions() []*DisruptionRisk {
 
 type WatchDisruptionsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	OwnerId       string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3" json:"owner_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -325,13 +356,6 @@ func (x *WatchDisruptionsRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use WatchDisruptionsRequest.ProtoReflect.Descriptor instead.
 func (*WatchDisruptionsRequest) Descriptor() ([]byte, []int) {
 	return file_proto_disruption_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *WatchDisruptionsRequest) GetOwnerId() string {
-	if x != nil {
-		return x.OwnerId
-	}
-	return ""
 }
 
 type WatchDisruptionsResponse struct {
@@ -414,22 +438,27 @@ const file_proto_disruption_proto_rawDesc = "" +
 	"\bseverity\x18\x03 \x01(\tR\bseverity\x12 \n" +
 	"\vdescription\x18\x04 \x01(\tR\vdescription\x12;\n" +
 	"\vdetected_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"detectedAt\"9\n" +
+	"detectedAt\"\x87\x01\n" +
 	"\x16AnalyzeShipmentRequest\x12\x1f\n" +
 	"\vshipment_id\x18\x01 \x01(\tR\n" +
-	"shipmentId\"\x89\x01\n" +
+	"shipmentId\x12-\n" +
+	"\x12current_conditions\x18\x02 \x01(\tR\x11currentConditions\x12\x1d\n" +
+	"\n" +
+	"cargo_type\x18\x03 \x01(\tR\tcargoType\"\xcd\x01\n" +
 	"\x17AnalyzeShipmentResponse\x12\x1f\n" +
 	"\vshipment_id\x18\x01 \x01(\tR\n" +
-	"shipmentId\x121\n" +
-	"\x05risks\x18\x02 \x03(\v2\x1b.supplychain.DisruptionRiskR\x05risks\x12\x1a\n" +
-	"\brerouted\x18\x03 \x01(\bR\brerouted\"F\n" +
+	"shipmentId\x12\x18\n" +
+	"\asummary\x18\x04 \x01(\tR\asummary\x12\x1d\n" +
+	"\n" +
+	"risk_level\x18\x05 \x01(\tR\triskLevel\x12+\n" +
+	"\x11suggested_actions\x18\x06 \x03(\tR\x10suggestedActions\x12+\n" +
+	"\x11detailed_analysis\x18\a \x01(\tR\x10detailedAnalysis\"F\n" +
 	"\x16ListDisruptionsRequest\x12\x1f\n" +
-	"\bseverity\x18\x01 \x01(\tH\x00R\bseverity\x88\x01\x01B\v\n" +
+	"\bseverity\x18\x02 \x01(\tH\x00R\bseverity\x88\x01\x01B\v\n" +
 	"\t_severity\"X\n" +
 	"\x17ListDisruptionsResponse\x12=\n" +
-	"\vdisruptions\x18\x01 \x03(\v2\x1b.supplychain.DisruptionRiskR\vdisruptions\"4\n" +
-	"\x17WatchDisruptionsRequest\x12\x19\n" +
-	"\bowner_id\x18\x01 \x01(\tR\aownerId\"\xd2\x01\n" +
+	"\vdisruptions\x18\x01 \x03(\v2\x1b.supplychain.DisruptionRiskR\vdisruptions\"\x19\n" +
+	"\x17WatchDisruptionsRequest\"\xd2\x01\n" +
 	"\x18WatchDisruptionsResponse\x12\x1f\n" +
 	"\vshipment_id\x18\x01 \x01(\tR\n" +
 	"shipmentId\x12/\n" +
@@ -467,21 +496,20 @@ var file_proto_disruption_proto_goTypes = []any{
 }
 var file_proto_disruption_proto_depIdxs = []int32{
 	7, // 0: supplychain.DisruptionRisk.detected_at:type_name -> google.protobuf.Timestamp
-	0, // 1: supplychain.AnalyzeShipmentResponse.risks:type_name -> supplychain.DisruptionRisk
-	0, // 2: supplychain.ListDisruptionsResponse.disruptions:type_name -> supplychain.DisruptionRisk
-	0, // 3: supplychain.WatchDisruptionsResponse.risk:type_name -> supplychain.DisruptionRisk
-	7, // 4: supplychain.WatchDisruptionsResponse.alert_time:type_name -> google.protobuf.Timestamp
-	1, // 5: supplychain.DisruptionService.AnalyzeShipment:input_type -> supplychain.AnalyzeShipmentRequest
-	3, // 6: supplychain.DisruptionService.ListDisruptions:input_type -> supplychain.ListDisruptionsRequest
-	5, // 7: supplychain.DisruptionService.WatchDisruptions:input_type -> supplychain.WatchDisruptionsRequest
-	2, // 8: supplychain.DisruptionService.AnalyzeShipment:output_type -> supplychain.AnalyzeShipmentResponse
-	4, // 9: supplychain.DisruptionService.ListDisruptions:output_type -> supplychain.ListDisruptionsResponse
-	6, // 10: supplychain.DisruptionService.WatchDisruptions:output_type -> supplychain.WatchDisruptionsResponse
-	8, // [8:11] is the sub-list for method output_type
-	5, // [5:8] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	0, // 1: supplychain.ListDisruptionsResponse.disruptions:type_name -> supplychain.DisruptionRisk
+	0, // 2: supplychain.WatchDisruptionsResponse.risk:type_name -> supplychain.DisruptionRisk
+	7, // 3: supplychain.WatchDisruptionsResponse.alert_time:type_name -> google.protobuf.Timestamp
+	1, // 4: supplychain.DisruptionService.AnalyzeShipment:input_type -> supplychain.AnalyzeShipmentRequest
+	3, // 5: supplychain.DisruptionService.ListDisruptions:input_type -> supplychain.ListDisruptionsRequest
+	5, // 6: supplychain.DisruptionService.WatchDisruptions:input_type -> supplychain.WatchDisruptionsRequest
+	2, // 7: supplychain.DisruptionService.AnalyzeShipment:output_type -> supplychain.AnalyzeShipmentResponse
+	4, // 8: supplychain.DisruptionService.ListDisruptions:output_type -> supplychain.ListDisruptionsResponse
+	6, // 9: supplychain.DisruptionService.WatchDisruptions:output_type -> supplychain.WatchDisruptionsResponse
+	7, // [7:10] is the sub-list for method output_type
+	4, // [4:7] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_proto_disruption_proto_init() }

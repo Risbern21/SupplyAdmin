@@ -6,7 +6,10 @@ import (
 
 	"cloud.google.com/go/firestore"
 	"github.com/risbern21/SupplyAdmin/gen/pb"
+	constants "github.com/risbern21/SupplyAdmin/internal/constants/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type FirebaseStore struct {
@@ -41,25 +44,67 @@ func locationsToMap(locs []*pb.Location) []map[string]any {
 	return results
 }
 
-func (s *FirebaseStore) SaveShipment(ctx context.Context, shipment *pb.Shipment) error {
+// Auth
+func (s *FirebaseStore) CreateUser(ctx context.Context, user *pb.User) error {
+	emailRef := s.db.Collection("unique_emails").Doc(user.Email)
+	userRef := s.db.Collection("users").NewDoc()
+
+	return s.db.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
+		snap, err := tx.Get(emailRef)
+		if err != nil && status.Code(err) != codes.NotFound {
+			return err
+		} else {
+			if snap.Exists() {
+				return constants.ErrEmailAlreadyUsed
+			}
+		}
+
+		if err := tx.Set(emailRef, map[string]any{
+			"UserId": user.Id,
+		}); err != nil {
+			return fmt.Errorf("failed to reserve email: %w", err)
+		}
+		if err := tx.Set(userRef, user); err != nil {
+			return fmt.Errorf("failed to create user: %w", err)
+		}
+		return nil
+	})
+}
+
+func (s *FirebaseStore) GetUser(ctx context.Context, email string) (*pb.User, error) {
+	coll := s.db.Collection("users")
+	docs, err := coll.
+		Where("Email", "==", email).
+		Limit(1).
+		Documents(ctx).
+		GetAll()
+	if err != nil || len(docs) == 0 {
+		return nil, constants.ErrUserNotFound
+	}
+
+	user := new(pb.User)
+	if err := docs[0].DataTo(user); err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (s *FirebaseStore) CreateShipment(ctx context.Context, shipment *pb.Shipment) error {
 	coll := s.db.Collection("shipments")
 	_, _, err := coll.Add(ctx, shipment)
 	return err
 }
 
-func (s *FirebaseStore) GetShipment(ctx context.Context, shipmentID string) (*pb.Shipment, error) {
+func (s *FirebaseStore) GetShipment(ctx context.Context, shipmentID, ownerID string) (*pb.Shipment, error) {
 	coll := s.db.Collection("shipments")
 	docs, err := coll.
 		Where("Id", "==", shipmentID).
+		Where("OwnerId", "==", ownerID).
 		Limit(1).
 		Documents(ctx).
 		GetAll()
-	if err != nil {
-		return nil, err
-	}
-
-	if len(docs) == 0 {
-		return nil, fmt.Errorf("shipment not found")
+	if err != nil || len(docs) == 0 {
+		return nil, constants.ErrShipmentNotFound
 	}
 
 	shipment := new(pb.Shipment)
@@ -69,19 +114,16 @@ func (s *FirebaseStore) GetShipment(ctx context.Context, shipmentID string) (*pb
 	return shipment, nil
 }
 
-func (s *FirebaseStore) UpdateShipment(ctx context.Context, shipmentID string, currentLocation *pb.Location, status string) (*pb.Shipment, error) {
+func (s *FirebaseStore) UpdateShipment(ctx context.Context, shipmentID, ownerID string, currentLocation *pb.Location, shipmentStatus string) (*pb.Shipment, error) {
 	coll := s.db.Collection("shipments")
 	docs, err := coll.
 		Where("Id", "==", shipmentID).
+		Where("OwnerId", "==", ownerID).
 		Limit(1).
 		Documents(ctx).
 		GetAll()
-	if err != nil {
-		return nil, err
-	}
-
-	if len(docs) == 0 {
-		return nil, fmt.Errorf("shipment not found")
+	if err != nil || len(docs) == 0 {
+		return nil, constants.ErrShipmentNotFound
 	}
 
 	oldShipment := new(pb.Shipment)
@@ -103,7 +145,7 @@ func (s *FirebaseStore) UpdateShipment(ctx context.Context, shipmentID string, c
 	})
 	firestoreUpdates = append(firestoreUpdates, firestore.Update{
 		Path:  "Status",
-		Value: status,
+		Value: shipmentStatus,
 	})
 
 	_, err = docs[0].Ref.Update(ctx, firestoreUpdates)
@@ -123,7 +165,7 @@ func (s *FirebaseStore) UpdateShipment(ctx context.Context, shipmentID string, c
 	}
 
 	if len(docs) == 0 {
-		return nil, fmt.Errorf("shipment not found")
+		return nil, constants.ErrShipmentNotFound
 	}
 
 	shipment := new(pb.Shipment)
@@ -133,18 +175,15 @@ func (s *FirebaseStore) UpdateShipment(ctx context.Context, shipmentID string, c
 	return shipment, nil
 }
 
-func (s *FirebaseStore) DeleteShipment(ctx context.Context, shipmentID string) (*pb.DeleteShipmentResponse, error) {
+func (s *FirebaseStore) DeleteShipment(ctx context.Context, shipmentID, ownerID string) (*pb.DeleteShipmentResponse, error) {
 	coll := s.db.Collection("shipments")
 	docs, err := coll.
 		Where("Id", "==", shipmentID).
+		Where("OwnerId", "==", ownerID).
 		Limit(1).
 		Documents(ctx).GetAll()
-	if err != nil {
-		return nil, err
-	}
-
-	if len(docs) == 0 {
-		return nil, fmt.Errorf("shipment not found")
+	if err != nil || len(docs) == 0 {
+		return nil, constants.ErrShipmentNotFound
 	}
 
 	_, err = docs[0].Ref.Delete(ctx)
@@ -197,13 +236,8 @@ func (s *FirebaseStore) GetRoute(ctx context.Context, shipmentID string) (*pb.Ro
 		Limit(1).
 		Documents(ctx).
 		GetAll()
-
-	if err != nil {
-		return nil, nil
-	}
-
-	if len(docs) == 0 {
-		return nil, fmt.Errorf("no routes found for this shipment")
+	if err != nil || len(docs) == 0 {
+		return nil, constants.ErrShipmentNotFound
 	}
 
 	route := new(pb.Route)
@@ -219,20 +253,46 @@ func (s *FirebaseStore) AddDisruptionRisk(ctx context.Context, disruptionRisk *p
 	return err
 }
 
-func (s *FirebaseStore) ListDisruptions(ctx context.Context) ([]*pb.DisruptionRisk, error) {
-	return nil, nil
+func (s *FirebaseStore) ListDisruptions(ctx context.Context, ownerID, severity string) ([]*pb.DisruptionRisk, error) {
+	coll := s.db.Collection("shipments")
+	docs, err := coll.
+		Where("Status", "==", severity).
+		Where("OwnerId", "==", ownerID).
+		Documents(ctx).
+		GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	res := []*pb.DisruptionRisk{}
+	for _, doc := range docs {
+		shipment := new(pb.Shipment)
+		if err := doc.DataTo(shipment); err != nil {
+			return nil, err
+		}
+
+		res = append(res, &pb.DisruptionRisk{
+			ShipmentId:  shipment.Id,
+			Severity:    shipment.Status,
+			Type:        shipment.Status,
+			Description: fmt.Sprintf("lat: %v - lng: %v -  current location: %v", shipment.CurrentLocation.Lat, shipment.CurrentLocation.Lng, shipment.CurrentLocation.Name),
+		})
+	}
+
+	return res, nil
 }
 
 // TrackShipment for streaming shipment updates
-func (s *FirebaseStore) TrackShipment(stream grpc.ServerStreamingServer[pb.ShipmentStatusUpdate], shipmentID string) error {
+func (s *FirebaseStore) TrackShipment(stream grpc.ServerStreamingServer[pb.TrackShipmentResponse], shipmentID, ownerID string) error {
 	coll := s.db.Collection("shipments")
 	docs, err := coll.
 		Where("Id", "==", shipmentID).
+		Where("OwnerId", "==", ownerID).
 		Limit(1).
 		Documents(stream.Context()).
 		GetAll()
 	if err != nil || len(docs) == 0 {
-		return fmt.Errorf("shipment not found")
+		return constants.ErrShipmentNotFound
 	}
 
 	snapshots := docs[0].Ref.Snapshots(stream.Context())
@@ -248,7 +308,7 @@ func (s *FirebaseStore) TrackShipment(stream grpc.ServerStreamingServer[pb.Shipm
 			return err
 		}
 
-		err = stream.Send(&pb.ShipmentStatusUpdate{
+		err = stream.Send(&pb.TrackShipmentResponse{
 			ShipmentId:      shipmentData.Id,
 			Status:          shipmentData.Status,
 			CurrentLocation: shipmentData.CurrentLocation,

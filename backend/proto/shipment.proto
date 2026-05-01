@@ -21,16 +21,17 @@ message Shipment {
   repeated Location route_points = 6;
   string status = 7; // IN_TRANSIT,DELAYED,AT_RISK
   string carrier = 8;
-  google.protobuf.Timestamp estimated_arrival = 9;
-  google.protobuf.Timestamp created_at = 10;
+  string cargo_type = 9;
+  google.protobuf.Timestamp estimated_arrival = 10;
+  google.protobuf.Timestamp created_at = 11;
 }
 
 message CreateShipmentRequest {
-  string owner_id = 1;
   Location origin = 2;
   Location destination = 3;
   string carrier = 4;
-  google.protobuf.Timestamp estimated_arrival = 5;
+  string cargo_type = 5;
+  google.protobuf.Timestamp estimated_arrival = 6;
 }
 
 message GetShipmentRequest {
@@ -53,7 +54,6 @@ message DeleteShipmentResponse {
 }
 
 message ListShipmentsRequest {
-  string owner_id = 1;
   string status = 2;
 }
 
@@ -61,7 +61,27 @@ message ListShipmentsResponse {
   repeated Shipment shipments = 1;
 }
 
-message ShipmentStatusUpdate {
+message PredictRiskRequest {
+  string id = 1;
+  double weather_severity = 2;
+  double traffic_density = 3;
+  double route_congestion = 4;
+  double distance_remaining = 5;
+  double time_of_day = 6;
+  double day_of_week = 7;
+  double vehicle_speed = 8;
+}
+
+message PredictRiskResponse {
+  double risk_score = 1; // 0.0 – 1.0 probability
+  string risk_level = 2; // LOW | MEDIUM | HIGH
+}
+
+message TrackShipmentRequest {
+  string id = 1;
+}
+
+message TrackShipmentResponse {
   string shipment_id = 1;
   string status = 2;
   Location current_location = 3;
@@ -76,6 +96,9 @@ service ShipmentService {
   rpc DeleteShipment(DeleteShipmentRequest) returns (DeleteShipmentResponse);
   rpc ListShipments(ListShipmentsRequest) returns (ListShipmentsResponse);
 
+  //Prediction
+  rpc PredictRisk(PredictRiskRequest) returns (PredictRiskResponse);
+
   //Streaming
-  rpc TrackShipment(GetShipmentRequest) returns (stream ShipmentStatusUpdate);
+  rpc TrackShipment(TrackShipmentRequest) returns (stream TrackShipmentResponse);
 }

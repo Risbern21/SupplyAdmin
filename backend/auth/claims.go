@@ -1,0 +1,31 @@
+package auth
+
+import (
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+)
+
+type UserClaims struct {
+	UserID   string
+	Username string
+	Email    string
+	jwt.RegisteredClaims
+}
+
+func NewUserClaims(userID, username, email string, duration time.Duration) *UserClaims {
+	tokenID := uuid.NewString()
+
+	return &UserClaims{
+		UserID:   userID,
+		Email:    email,
+		Username: username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        tokenID,
+			Subject:   email,
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
+		},
+	}
+}

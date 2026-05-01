@@ -3,39 +3,50 @@ package api
 import (
 	"context"
 
-	"cloud.google.com/go/firestore"
 	"github.com/google/uuid"
 	"github.com/risbern21/SupplyAdmin/gen/pb"
+	"github.com/risbern21/SupplyAdmin/interceptors"
+	"github.com/risbern21/SupplyAdmin/ml"
 	"github.com/risbern21/SupplyAdmin/store"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type ShipmentHandler struct {
 	pb.UnimplementedShipmentServiceServer
-	store store.Storer
-	db    *firestore.Client
+	store    store.Storer
+	mlClient *ml.MLClient
 }
 
-func NewShipmentHandler(s store.Storer, db *firestore.Client) *ShipmentHandler {
+func NewShipmentHandler(s store.Storer, mlClient *ml.MLClient) *ShipmentHandler {
 	return &ShipmentHandler{
-		store: s,
-		db:    db,
+		store:    s,
+		mlClient: mlClient,
 	}
 }
 
 func (h *ShipmentHandler) CreateShipment(ctx context.Context, req *pb.CreateShipmentRequest) (*pb.Shipment, error) {
+	claims, err := interceptors.ClaimsFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	s := new(pb.Shipment)
 	s.Id = uuid.NewString()
-	s.OwnerId = req.OwnerId
+	s.OwnerId = claims.UserID
 	s.Origin = req.Origin
 	s.Destination = req.Destination
 	s.Carrier = req.Carrier
 	s.EstimatedArrival = req.EstimatedArrival
 	s.CurrentLocation = req.Origin
-	s.RoutePoints = nil
+	s.RoutePoints = []*pb.Location{}
 	s.Status = "IN_TRANSIT"
+	s.CargoType = req.CargoType
+	s.CreatedAt = timestamppb.Now()
 
-	if err := h.store.SaveShipment(ctx, s); err != nil {
+	if err := h.store.CreateShipment(ctx, s); err != nil {
 		return nil, err
 	}
 
@@ -61,15 +72,26 @@ func (h *ShipmentHandler) CreateShipment(ctx context.Context, req *pb.CreateShip
 }
 
 func (h *ShipmentHandler) GetShipment(ctx context.Context, req *pb.GetShipmentRequest) (*pb.Shipment, error) {
-	s, err := h.store.GetShipment(ctx, req.Id)
+	claims, err := interceptors.ClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, err.Error())
+	}
+
+	s, err := h.store.GetShipment(ctx, req.Id, claims.UserID)
 	if err != nil {
 		return nil, err
 	}
+
 	return s, nil
 }
 
 func (h *ShipmentHandler) UpdateShipment(ctx context.Context, req *pb.UpdateShipmentRequest) (*pb.Shipment, error) {
-	s, err := h.store.UpdateShipment(ctx, req.Id, req.CurrentLocation, req.Status)
+	claims, err := interceptors.ClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, err.Error())
+	}
+
+	s, err := h.store.UpdateShipment(ctx, req.Id, claims.UserID, req.CurrentLocation, req.Status)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +99,12 @@ func (h *ShipmentHandler) UpdateShipment(ctx context.Context, req *pb.UpdateShip
 }
 
 func (h *ShipmentHandler) DeleteShipment(ctx context.Context, req *pb.DeleteShipmentRequest) (*pb.DeleteShipmentResponse, error) {
-	res, err := h.store.DeleteShipment(ctx, req.Id)
+	claims, err := interceptors.ClaimsFromContext(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, err.Error())
+	}
+
+	res, err := h.store.DeleteShipment(ctx, req.Id, claims.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +112,12 @@ func (h *ShipmentHandler) DeleteShipment(ctx context.Context, req *pb.DeleteShip
 }
 
 func (h *ShipmentHandler) ListShipments(ctx context.Context, req *pb.ListShipmentsRequest) (*pb.ListShipmentsResponse, error) {
-	s, err := h.store.ListAllShipments(ctx, req.OwnerId)
+	claims, err := interceptors.ClaimsFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	s, err := h.store.ListAllShipments(ctx, claims.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -93,6 +125,10 @@ func (h *ShipmentHandler) ListShipments(ctx context.Context, req *pb.ListShipmen
 	return s, nil
 }
 
-func (h *ShipmentHandler) TrackShipment(req *pb.GetShipmentRequest, stream grpc.ServerStreamingServer[pb.ShipmentStatusUpdate]) error {
-	return h.store.TrackShipment(stream, req.Id)
+func (h *ShipmentHandler) TrackShipment(req *pb.TrackShipmentRequest, stream grpc.ServerStreamingServer[pb.TrackShipmentResponse]) error {
+	claims, err := interceptors.ClaimsFromContext(stream.Context())
+	if err != nil {
+		return err
+	}
+	return h.store.TrackShipment(stream, req.Id, claims.UserID)
 }

@@ -16,25 +16,27 @@ message DisruptionRisk {
 
 message AnalyzeShipmentRequest {
   string shipment_id = 1;
+  string current_conditions = 2;
+  string cargo_type = 3;
 }
 
 message AnalyzeShipmentResponse {
   string shipment_id = 1;
-  repeated DisruptionRisk risks = 2;
-  bool rerouted = 3;
+  string summary = 4;
+  string risk_level = 5; // LOW | MEDIUM | HIGH | CRITICAL
+  repeated string suggested_actions = 6;
+  string detailed_analysis = 7;
 }
 
 message ListDisruptionsRequest {
-  optional string severity = 1;
+  optional string severity = 2;
 }
 
 message ListDisruptionsResponse {
   repeated DisruptionRisk disruptions = 1;
 }
 
-message WatchDisruptionsRequest {
-  string owner_id = 1;
-}
+message WatchDisruptionsRequest {}
 
 message WatchDisruptionsResponse {
   string shipment_id = 1;
@@ -48,3 +50,19 @@ service DisruptionService {
   rpc ListDisruptions(ListDisruptionsRequest) returns (ListDisruptionsResponse);
   rpc WatchDisruptions(WatchDisruptionsRequest) returns (stream WatchDisruptionsResponse);
 }
+
+//
+// message AnalyzeDisruptionRequest {
+//   string shipment_id = 1;
+//   string origin = 2;
+//   string destination = 3;
+//   string cargo_type = 4;
+//   string current_conditions = 5;
+// }
+//
+// message AnalyzeDisruptionResponse {
+//   string summary = 1;
+//   string risk_level = 2; // LOW | MEDIUM | HIGH | CRITICAL
+//   repeated string suggested_actions = 3;
+//   string detailed_analysis = 4;
+// }

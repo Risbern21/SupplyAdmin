@@ -17,11 +17,42 @@ message Route {
   double estimated_duration_minutes = 3;
   double distance_km = 4;
   string reason = 5;
+  string traffic = 6;
+  string weather = 7;
 }
+
+// message MLRouteCandidate {
+//   string route_id = 1;
+//   double distance = 2;
+//   double traffic = 3;
+//   double weather = 4;
+// }
+//
+// message MLRouteResult {
+//   string route_id = 1;
+//   double distance = 2;
+//   double traffic = 3;
+//   double weather = 4;
+//   double risk_score = 5;
+// }
+//
+// message MLOptimizeRouteRequest {
+//   repeated MLRouteCandidate candidates = 1;
+// }
+//
+// message MLOptimizeRouteResponse {
+//   MLRouteResult best_route = 1;
+//   repeated MLRouteResult all_routes = 2;
+// }
 
 message OptimizeRouteRequest {
   string shipment_id = 1;
-  repeated string avoid_types = 2;
+  repeated Route route_candidates = 2;
+}
+
+message OptimizeRouteResponse {
+  string shipment_id = 1;
+  Route best_route = 2;
 }
 
 message GetRouteRequest {
@@ -29,6 +60,6 @@ message GetRouteRequest {
 }
 
 service RouteService {
-  rpc OptimizeRoute(OptimizeRouteRequest) returns (Route);
+  rpc OptimizeRoute(OptimizeRouteRequest) returns (OptimizeRouteResponse);
   rpc GetRoute(GetRouteRequest) returns (Route);
 }

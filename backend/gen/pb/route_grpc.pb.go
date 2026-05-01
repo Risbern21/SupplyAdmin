@@ -27,7 +27,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RouteServiceClient interface {
-	OptimizeRoute(ctx context.Context, in *OptimizeRouteRequest, opts ...grpc.CallOption) (*Route, error)
+	OptimizeRoute(ctx context.Context, in *OptimizeRouteRequest, opts ...grpc.CallOption) (*OptimizeRouteResponse, error)
 	GetRoute(ctx context.Context, in *GetRouteRequest, opts ...grpc.CallOption) (*Route, error)
 }
 
@@ -39,9 +39,9 @@ func NewRouteServiceClient(cc grpc.ClientConnInterface) RouteServiceClient {
 	return &routeServiceClient{cc}
 }
 
-func (c *routeServiceClient) OptimizeRoute(ctx context.Context, in *OptimizeRouteRequest, opts ...grpc.CallOption) (*Route, error) {
+func (c *routeServiceClient) OptimizeRoute(ctx context.Context, in *OptimizeRouteRequest, opts ...grpc.CallOption) (*OptimizeRouteResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Route)
+	out := new(OptimizeRouteResponse)
 	err := c.cc.Invoke(ctx, RouteService_OptimizeRoute_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func (c *routeServiceClient) GetRoute(ctx context.Context, in *GetRouteRequest, 
 // All implementations must embed UnimplementedRouteServiceServer
 // for forward compatibility.
 type RouteServiceServer interface {
-	OptimizeRoute(context.Context, *OptimizeRouteRequest) (*Route, error)
+	OptimizeRoute(context.Context, *OptimizeRouteRequest) (*OptimizeRouteResponse, error)
 	GetRoute(context.Context, *GetRouteRequest) (*Route, error)
 	mustEmbedUnimplementedRouteServiceServer()
 }
@@ -75,7 +75,7 @@ type RouteServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedRouteServiceServer struct{}
 
-func (UnimplementedRouteServiceServer) OptimizeRoute(context.Context, *OptimizeRouteRequest) (*Route, error) {
+func (UnimplementedRouteServiceServer) OptimizeRoute(context.Context, *OptimizeRouteRequest) (*OptimizeRouteResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method OptimizeRoute not implemented")
 }
 func (UnimplementedRouteServiceServer) GetRoute(context.Context, *GetRouteRequest) (*Route, error) {

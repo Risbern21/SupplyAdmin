@@ -96,6 +96,8 @@ type Route struct {
 	EstimatedDurationMinutes float64                `protobuf:"fixed64,3,opt,name=estimated_duration_minutes,json=estimatedDurationMinutes,proto3" json:"estimated_duration_minutes,omitempty"`
 	DistanceKm               float64                `protobuf:"fixed64,4,opt,name=distance_km,json=distanceKm,proto3" json:"distance_km,omitempty"`
 	Reason                   string                 `protobuf:"bytes,5,opt,name=reason,proto3" json:"reason,omitempty"`
+	Traffic                  string                 `protobuf:"bytes,6,opt,name=traffic,proto3" json:"traffic,omitempty"`
+	Weather                  string                 `protobuf:"bytes,7,opt,name=weather,proto3" json:"weather,omitempty"`
 	unknownFields            protoimpl.UnknownFields
 	sizeCache                protoimpl.SizeCache
 }
@@ -165,12 +167,26 @@ func (x *Route) GetReason() string {
 	return ""
 }
 
+func (x *Route) GetTraffic() string {
+	if x != nil {
+		return x.Traffic
+	}
+	return ""
+}
+
+func (x *Route) GetWeather() string {
+	if x != nil {
+		return x.Weather
+	}
+	return ""
+}
+
 type OptimizeRouteRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ShipmentId    string                 `protobuf:"bytes,1,opt,name=shipment_id,json=shipmentId,proto3" json:"shipment_id,omitempty"`
-	AvoidTypes    []string               `protobuf:"bytes,2,rep,name=avoid_types,json=avoidTypes,proto3" json:"avoid_types,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	ShipmentId      string                 `protobuf:"bytes,1,opt,name=shipment_id,json=shipmentId,proto3" json:"shipment_id,omitempty"`
+	RouteCandidates []*Route               `protobuf:"bytes,2,rep,name=route_candidates,json=routeCandidates,proto3" json:"route_candidates,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *OptimizeRouteRequest) Reset() {
@@ -210,9 +226,61 @@ func (x *OptimizeRouteRequest) GetShipmentId() string {
 	return ""
 }
 
-func (x *OptimizeRouteRequest) GetAvoidTypes() []string {
+func (x *OptimizeRouteRequest) GetRouteCandidates() []*Route {
 	if x != nil {
-		return x.AvoidTypes
+		return x.RouteCandidates
+	}
+	return nil
+}
+
+type OptimizeRouteResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ShipmentId    string                 `protobuf:"bytes,1,opt,name=shipment_id,json=shipmentId,proto3" json:"shipment_id,omitempty"`
+	BestRoute     *Route                 `protobuf:"bytes,2,opt,name=best_route,json=bestRoute,proto3" json:"best_route,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OptimizeRouteResponse) Reset() {
+	*x = OptimizeRouteResponse{}
+	mi := &file_proto_route_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OptimizeRouteResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OptimizeRouteResponse) ProtoMessage() {}
+
+func (x *OptimizeRouteResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_route_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OptimizeRouteResponse.ProtoReflect.Descriptor instead.
+func (*OptimizeRouteResponse) Descriptor() ([]byte, []int) {
+	return file_proto_route_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *OptimizeRouteResponse) GetShipmentId() string {
+	if x != nil {
+		return x.ShipmentId
+	}
+	return ""
+}
+
+func (x *OptimizeRouteResponse) GetBestRoute() *Route {
+	if x != nil {
+		return x.BestRoute
 	}
 	return nil
 }
@@ -226,7 +294,7 @@ type GetRouteRequest struct {
 
 func (x *GetRouteRequest) Reset() {
 	*x = GetRouteRequest{}
-	mi := &file_proto_route_proto_msgTypes[3]
+	mi := &file_proto_route_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -238,7 +306,7 @@ func (x *GetRouteRequest) String() string {
 func (*GetRouteRequest) ProtoMessage() {}
 
 func (x *GetRouteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_route_proto_msgTypes[3]
+	mi := &file_proto_route_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -251,7 +319,7 @@ func (x *GetRouteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRouteRequest.ProtoReflect.Descriptor instead.
 func (*GetRouteRequest) Descriptor() ([]byte, []int) {
-	return file_proto_route_proto_rawDescGZIP(), []int{3}
+	return file_proto_route_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GetRouteRequest) GetShipmentId() string {
@@ -271,7 +339,7 @@ const file_proto_route_proto_rawDesc = "" +
 	"\x03lat\x18\x01 \x01(\x01R\x03lat\x12\x10\n" +
 	"\x03lng\x18\x02 \x01(\x01R\x03lng\x12\x14\n" +
 	"\x05label\x18\x03 \x01(\tR\x05label\x12\x1a\n" +
-	"\bsequence\x18\x04 \x01(\x05R\bsequence\"\xd0\x01\n" +
+	"\bsequence\x18\x04 \x01(\x05R\bsequence\"\x84\x02\n" +
 	"\x05Route\x12\x1f\n" +
 	"\vshipment_id\x18\x01 \x01(\tR\n" +
 	"shipmentId\x12/\n" +
@@ -279,17 +347,23 @@ const file_proto_route_proto_rawDesc = "" +
 	"\x1aestimated_duration_minutes\x18\x03 \x01(\x01R\x18estimatedDurationMinutes\x12\x1f\n" +
 	"\vdistance_km\x18\x04 \x01(\x01R\n" +
 	"distanceKm\x12\x16\n" +
-	"\x06reason\x18\x05 \x01(\tR\x06reason\"X\n" +
+	"\x06reason\x18\x05 \x01(\tR\x06reason\x12\x18\n" +
+	"\atraffic\x18\x06 \x01(\tR\atraffic\x12\x18\n" +
+	"\aweather\x18\a \x01(\tR\aweather\"v\n" +
 	"\x14OptimizeRouteRequest\x12\x1f\n" +
 	"\vshipment_id\x18\x01 \x01(\tR\n" +
-	"shipmentId\x12\x1f\n" +
-	"\vavoid_types\x18\x02 \x03(\tR\n" +
-	"avoidTypes\"2\n" +
+	"shipmentId\x12=\n" +
+	"\x10route_candidates\x18\x02 \x03(\v2\x12.supplychain.RouteR\x0frouteCandidates\"k\n" +
+	"\x15OptimizeRouteResponse\x12\x1f\n" +
+	"\vshipment_id\x18\x01 \x01(\tR\n" +
+	"shipmentId\x121\n" +
+	"\n" +
+	"best_route\x18\x02 \x01(\v2\x12.supplychain.RouteR\tbestRoute\"2\n" +
 	"\x0fGetRouteRequest\x12\x1f\n" +
 	"\vshipment_id\x18\x01 \x01(\tR\n" +
-	"shipmentId2\x94\x01\n" +
-	"\fRouteService\x12F\n" +
-	"\rOptimizeRoute\x12!.supplychain.OptimizeRouteRequest\x1a\x12.supplychain.Route\x12<\n" +
+	"shipmentId2\xa4\x01\n" +
+	"\fRouteService\x12V\n" +
+	"\rOptimizeRoute\x12!.supplychain.OptimizeRouteRequest\x1a\".supplychain.OptimizeRouteResponse\x12<\n" +
 	"\bGetRoute\x12\x1c.supplychain.GetRouteRequest\x1a\x12.supplychain.RouteB\bZ\x06gen/pbb\x06proto3"
 
 var (
@@ -304,24 +378,27 @@ func file_proto_route_proto_rawDescGZIP() []byte {
 	return file_proto_route_proto_rawDescData
 }
 
-var file_proto_route_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_proto_route_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_proto_route_proto_goTypes = []any{
-	(*RoutePoint)(nil),           // 0: supplychain.RoutePoint
-	(*Route)(nil),                // 1: supplychain.Route
-	(*OptimizeRouteRequest)(nil), // 2: supplychain.OptimizeRouteRequest
-	(*GetRouteRequest)(nil),      // 3: supplychain.GetRouteRequest
+	(*RoutePoint)(nil),            // 0: supplychain.RoutePoint
+	(*Route)(nil),                 // 1: supplychain.Route
+	(*OptimizeRouteRequest)(nil),  // 2: supplychain.OptimizeRouteRequest
+	(*OptimizeRouteResponse)(nil), // 3: supplychain.OptimizeRouteResponse
+	(*GetRouteRequest)(nil),       // 4: supplychain.GetRouteRequest
 }
 var file_proto_route_proto_depIdxs = []int32{
 	0, // 0: supplychain.Route.points:type_name -> supplychain.RoutePoint
-	2, // 1: supplychain.RouteService.OptimizeRoute:input_type -> supplychain.OptimizeRouteRequest
-	3, // 2: supplychain.RouteService.GetRoute:input_type -> supplychain.GetRouteRequest
-	1, // 3: supplychain.RouteService.OptimizeRoute:output_type -> supplychain.Route
-	1, // 4: supplychain.RouteService.GetRoute:output_type -> supplychain.Route
-	3, // [3:5] is the sub-list for method output_type
-	1, // [1:3] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	1, // 1: supplychain.OptimizeRouteRequest.route_candidates:type_name -> supplychain.Route
+	1, // 2: supplychain.OptimizeRouteResponse.best_route:type_name -> supplychain.Route
+	2, // 3: supplychain.RouteService.OptimizeRoute:input_type -> supplychain.OptimizeRouteRequest
+	4, // 4: supplychain.RouteService.GetRoute:input_type -> supplychain.GetRouteRequest
+	3, // 5: supplychain.RouteService.OptimizeRoute:output_type -> supplychain.OptimizeRouteResponse
+	1, // 6: supplychain.RouteService.GetRoute:output_type -> supplychain.Route
+	5, // [5:7] is the sub-list for method output_type
+	3, // [3:5] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_proto_route_proto_init() }
@@ -335,7 +412,7 @@ func file_proto_route_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_route_proto_rawDesc), len(file_proto_route_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

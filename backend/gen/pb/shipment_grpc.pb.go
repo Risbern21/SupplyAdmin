@@ -24,6 +24,7 @@ const (
 	ShipmentService_UpdateShipment_FullMethodName = "/supplychain.ShipmentService/UpdateShipment"
 	ShipmentService_DeleteShipment_FullMethodName = "/supplychain.ShipmentService/DeleteShipment"
 	ShipmentService_ListShipments_FullMethodName  = "/supplychain.ShipmentService/ListShipments"
+	ShipmentService_PredictRisk_FullMethodName    = "/supplychain.ShipmentService/PredictRisk"
 	ShipmentService_TrackShipment_FullMethodName  = "/supplychain.ShipmentService/TrackShipment"
 )
 
@@ -37,8 +38,10 @@ type ShipmentServiceClient interface {
 	UpdateShipment(ctx context.Context, in *UpdateShipmentRequest, opts ...grpc.CallOption) (*Shipment, error)
 	DeleteShipment(ctx context.Context, in *DeleteShipmentRequest, opts ...grpc.CallOption) (*DeleteShipmentResponse, error)
 	ListShipments(ctx context.Context, in *ListShipmentsRequest, opts ...grpc.CallOption) (*ListShipmentsResponse, error)
+	// Prediction
+	PredictRisk(ctx context.Context, in *PredictRiskRequest, opts ...grpc.CallOption) (*PredictRiskResponse, error)
 	// Streaming
-	TrackShipment(ctx context.Context, in *GetShipmentRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ShipmentStatusUpdate], error)
+	TrackShipment(ctx context.Context, in *TrackShipmentRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[TrackShipmentResponse], error)
 }
 
 type shipmentServiceClient struct {
@@ -99,13 +102,23 @@ func (c *shipmentServiceClient) ListShipments(ctx context.Context, in *ListShipm
 	return out, nil
 }
 
-func (c *shipmentServiceClient) TrackShipment(ctx context.Context, in *GetShipmentRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ShipmentStatusUpdate], error) {
+func (c *shipmentServiceClient) PredictRisk(ctx context.Context, in *PredictRiskRequest, opts ...grpc.CallOption) (*PredictRiskResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PredictRiskResponse)
+	err := c.cc.Invoke(ctx, ShipmentService_PredictRisk_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *shipmentServiceClient) TrackShipment(ctx context.Context, in *TrackShipmentRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[TrackShipmentResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &ShipmentService_ServiceDesc.Streams[0], ShipmentService_TrackShipment_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[GetShipmentRequest, ShipmentStatusUpdate]{ClientStream: stream}
+	x := &grpc.GenericClientStream[TrackShipmentRequest, TrackShipmentResponse]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -116,7 +129,7 @@ func (c *shipmentServiceClient) TrackShipment(ctx context.Context, in *GetShipme
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type ShipmentService_TrackShipmentClient = grpc.ServerStreamingClient[ShipmentStatusUpdate]
+type ShipmentService_TrackShipmentClient = grpc.ServerStreamingClient[TrackShipmentResponse]
 
 // ShipmentServiceServer is the server API for ShipmentService service.
 // All implementations must embed UnimplementedShipmentServiceServer
@@ -128,8 +141,10 @@ type ShipmentServiceServer interface {
 	UpdateShipment(context.Context, *UpdateShipmentRequest) (*Shipment, error)
 	DeleteShipment(context.Context, *DeleteShipmentRequest) (*DeleteShipmentResponse, error)
 	ListShipments(context.Context, *ListShipmentsRequest) (*ListShipmentsResponse, error)
+	// Prediction
+	PredictRisk(context.Context, *PredictRiskRequest) (*PredictRiskResponse, error)
 	// Streaming
-	TrackShipment(*GetShipmentRequest, grpc.ServerStreamingServer[ShipmentStatusUpdate]) error
+	TrackShipment(*TrackShipmentRequest, grpc.ServerStreamingServer[TrackShipmentResponse]) error
 	mustEmbedUnimplementedShipmentServiceServer()
 }
 
@@ -155,7 +170,10 @@ func (UnimplementedShipmentServiceServer) DeleteShipment(context.Context, *Delet
 func (UnimplementedShipmentServiceServer) ListShipments(context.Context, *ListShipmentsRequest) (*ListShipmentsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListShipments not implemented")
 }
-func (UnimplementedShipmentServiceServer) TrackShipment(*GetShipmentRequest, grpc.ServerStreamingServer[ShipmentStatusUpdate]) error {
+func (UnimplementedShipmentServiceServer) PredictRisk(context.Context, *PredictRiskRequest) (*PredictRiskResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method PredictRisk not implemented")
+}
+func (UnimplementedShipmentServiceServer) TrackShipment(*TrackShipmentRequest, grpc.ServerStreamingServer[TrackShipmentResponse]) error {
 	return status.Error(codes.Unimplemented, "method TrackShipment not implemented")
 }
 func (UnimplementedShipmentServiceServer) mustEmbedUnimplementedShipmentServiceServer() {}
@@ -269,16 +287,34 @@ func _ShipmentService_ListShipments_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ShipmentService_PredictRisk_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PredictRiskRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ShipmentServiceServer).PredictRisk(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ShipmentService_PredictRisk_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ShipmentServiceServer).PredictRisk(ctx, req.(*PredictRiskRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ShipmentService_TrackShipment_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(GetShipmentRequest)
+	m := new(TrackShipmentRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ShipmentServiceServer).TrackShipment(m, &grpc.GenericServerStream[GetShipmentRequest, ShipmentStatusUpdate]{ServerStream: stream})
+	return srv.(ShipmentServiceServer).TrackShipment(m, &grpc.GenericServerStream[TrackShipmentRequest, TrackShipmentResponse]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type ShipmentService_TrackShipmentServer = grpc.ServerStreamingServer[ShipmentStatusUpdate]
+type ShipmentService_TrackShipmentServer = grpc.ServerStreamingServer[TrackShipmentResponse]
 
 // ShipmentService_ServiceDesc is the grpc.ServiceDesc for ShipmentService service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -306,6 +342,10 @@ var ShipmentService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListShipments",
 			Handler:    _ShipmentService_ListShipments_Handler,
+		},
+		{
+			MethodName: "PredictRisk",
+			Handler:    _ShipmentService_PredictRisk_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

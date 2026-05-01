@@ -92,8 +92,9 @@ type Shipment struct {
 	RoutePoints      []*Location            `protobuf:"bytes,6,rep,name=route_points,json=routePoints,proto3" json:"route_points,omitempty"`
 	Status           string                 `protobuf:"bytes,7,opt,name=status,proto3" json:"status,omitempty"` // IN_TRANSIT,DELAYED,AT_RISK
 	Carrier          string                 `protobuf:"bytes,8,opt,name=carrier,proto3" json:"carrier,omitempty"`
-	EstimatedArrival *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=estimated_arrival,json=estimatedArrival,proto3" json:"estimated_arrival,omitempty"`
-	CreatedAt        *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	CargoType        string                 `protobuf:"bytes,9,opt,name=cargo_type,json=cargoType,proto3" json:"cargo_type,omitempty"`
+	EstimatedArrival *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=estimated_arrival,json=estimatedArrival,proto3" json:"estimated_arrival,omitempty"`
+	CreatedAt        *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -184,6 +185,13 @@ func (x *Shipment) GetCarrier() string {
 	return ""
 }
 
+func (x *Shipment) GetCargoType() string {
+	if x != nil {
+		return x.CargoType
+	}
+	return ""
+}
+
 func (x *Shipment) GetEstimatedArrival() *timestamppb.Timestamp {
 	if x != nil {
 		return x.EstimatedArrival
@@ -200,11 +208,11 @@ func (x *Shipment) GetCreatedAt() *timestamppb.Timestamp {
 
 type CreateShipmentRequest struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
-	OwnerId          string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3" json:"owner_id,omitempty"`
 	Origin           *Location              `protobuf:"bytes,2,opt,name=origin,proto3" json:"origin,omitempty"`
 	Destination      *Location              `protobuf:"bytes,3,opt,name=destination,proto3" json:"destination,omitempty"`
 	Carrier          string                 `protobuf:"bytes,4,opt,name=carrier,proto3" json:"carrier,omitempty"`
-	EstimatedArrival *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=estimated_arrival,json=estimatedArrival,proto3" json:"estimated_arrival,omitempty"`
+	CargoType        string                 `protobuf:"bytes,5,opt,name=cargo_type,json=cargoType,proto3" json:"cargo_type,omitempty"`
+	EstimatedArrival *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=estimated_arrival,json=estimatedArrival,proto3" json:"estimated_arrival,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -239,13 +247,6 @@ func (*CreateShipmentRequest) Descriptor() ([]byte, []int) {
 	return file_proto_shipment_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *CreateShipmentRequest) GetOwnerId() string {
-	if x != nil {
-		return x.OwnerId
-	}
-	return ""
-}
-
 func (x *CreateShipmentRequest) GetOrigin() *Location {
 	if x != nil {
 		return x.Origin
@@ -263,6 +264,13 @@ func (x *CreateShipmentRequest) GetDestination() *Location {
 func (x *CreateShipmentRequest) GetCarrier() string {
 	if x != nil {
 		return x.Carrier
+	}
+	return ""
+}
+
+func (x *CreateShipmentRequest) GetCargoType() string {
+	if x != nil {
+		return x.CargoType
 	}
 	return ""
 }
@@ -476,7 +484,6 @@ func (x *DeleteShipmentResponse) GetMessage() string {
 
 type ListShipmentsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	OwnerId       string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3" json:"owner_id,omitempty"`
 	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -510,13 +517,6 @@ func (x *ListShipmentsRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use ListShipmentsRequest.ProtoReflect.Descriptor instead.
 func (*ListShipmentsRequest) Descriptor() ([]byte, []int) {
 	return file_proto_shipment_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *ListShipmentsRequest) GetOwnerId() string {
-	if x != nil {
-		return x.OwnerId
-	}
-	return ""
 }
 
 func (x *ListShipmentsRequest) GetStatus() string {
@@ -570,30 +570,34 @@ func (x *ListShipmentsResponse) GetShipments() []*Shipment {
 	return nil
 }
 
-type ShipmentStatusUpdate struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	ShipmentId      string                 `protobuf:"bytes,1,opt,name=shipment_id,json=shipmentId,proto3" json:"shipment_id,omitempty"`
-	Status          string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
-	CurrentLocation *Location              `protobuf:"bytes,3,opt,name=current_location,json=currentLocation,proto3" json:"current_location,omitempty"`
-	UpdatedAt       *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+type PredictRiskRequest struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Id                string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	WeatherSeverity   float64                `protobuf:"fixed64,2,opt,name=weather_severity,json=weatherSeverity,proto3" json:"weather_severity,omitempty"`
+	TrafficDensity    float64                `protobuf:"fixed64,3,opt,name=traffic_density,json=trafficDensity,proto3" json:"traffic_density,omitempty"`
+	RouteCongestion   float64                `protobuf:"fixed64,4,opt,name=route_congestion,json=routeCongestion,proto3" json:"route_congestion,omitempty"`
+	DistanceRemaining float64                `protobuf:"fixed64,5,opt,name=distance_remaining,json=distanceRemaining,proto3" json:"distance_remaining,omitempty"`
+	TimeOfDay         float64                `protobuf:"fixed64,6,opt,name=time_of_day,json=timeOfDay,proto3" json:"time_of_day,omitempty"`
+	DayOfWeek         float64                `protobuf:"fixed64,7,opt,name=day_of_week,json=dayOfWeek,proto3" json:"day_of_week,omitempty"`
+	VehicleSpeed      float64                `protobuf:"fixed64,8,opt,name=vehicle_speed,json=vehicleSpeed,proto3" json:"vehicle_speed,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
-func (x *ShipmentStatusUpdate) Reset() {
-	*x = ShipmentStatusUpdate{}
+func (x *PredictRiskRequest) Reset() {
+	*x = PredictRiskRequest{}
 	mi := &file_proto_shipment_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ShipmentStatusUpdate) String() string {
+func (x *PredictRiskRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ShipmentStatusUpdate) ProtoMessage() {}
+func (*PredictRiskRequest) ProtoMessage() {}
 
-func (x *ShipmentStatusUpdate) ProtoReflect() protoreflect.Message {
+func (x *PredictRiskRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_shipment_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -605,33 +609,225 @@ func (x *ShipmentStatusUpdate) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ShipmentStatusUpdate.ProtoReflect.Descriptor instead.
-func (*ShipmentStatusUpdate) Descriptor() ([]byte, []int) {
+// Deprecated: Use PredictRiskRequest.ProtoReflect.Descriptor instead.
+func (*PredictRiskRequest) Descriptor() ([]byte, []int) {
 	return file_proto_shipment_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *ShipmentStatusUpdate) GetShipmentId() string {
+func (x *PredictRiskRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *PredictRiskRequest) GetWeatherSeverity() float64 {
+	if x != nil {
+		return x.WeatherSeverity
+	}
+	return 0
+}
+
+func (x *PredictRiskRequest) GetTrafficDensity() float64 {
+	if x != nil {
+		return x.TrafficDensity
+	}
+	return 0
+}
+
+func (x *PredictRiskRequest) GetRouteCongestion() float64 {
+	if x != nil {
+		return x.RouteCongestion
+	}
+	return 0
+}
+
+func (x *PredictRiskRequest) GetDistanceRemaining() float64 {
+	if x != nil {
+		return x.DistanceRemaining
+	}
+	return 0
+}
+
+func (x *PredictRiskRequest) GetTimeOfDay() float64 {
+	if x != nil {
+		return x.TimeOfDay
+	}
+	return 0
+}
+
+func (x *PredictRiskRequest) GetDayOfWeek() float64 {
+	if x != nil {
+		return x.DayOfWeek
+	}
+	return 0
+}
+
+func (x *PredictRiskRequest) GetVehicleSpeed() float64 {
+	if x != nil {
+		return x.VehicleSpeed
+	}
+	return 0
+}
+
+type PredictRiskResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RiskScore     float64                `protobuf:"fixed64,1,opt,name=risk_score,json=riskScore,proto3" json:"risk_score,omitempty"` // 0.0 – 1.0 probability
+	RiskLevel     string                 `protobuf:"bytes,2,opt,name=risk_level,json=riskLevel,proto3" json:"risk_level,omitempty"`   // LOW | MEDIUM | HIGH
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PredictRiskResponse) Reset() {
+	*x = PredictRiskResponse{}
+	mi := &file_proto_shipment_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PredictRiskResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PredictRiskResponse) ProtoMessage() {}
+
+func (x *PredictRiskResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_shipment_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PredictRiskResponse.ProtoReflect.Descriptor instead.
+func (*PredictRiskResponse) Descriptor() ([]byte, []int) {
+	return file_proto_shipment_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *PredictRiskResponse) GetRiskScore() float64 {
+	if x != nil {
+		return x.RiskScore
+	}
+	return 0
+}
+
+func (x *PredictRiskResponse) GetRiskLevel() string {
+	if x != nil {
+		return x.RiskLevel
+	}
+	return ""
+}
+
+type TrackShipmentRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TrackShipmentRequest) Reset() {
+	*x = TrackShipmentRequest{}
+	mi := &file_proto_shipment_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TrackShipmentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TrackShipmentRequest) ProtoMessage() {}
+
+func (x *TrackShipmentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_shipment_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TrackShipmentRequest.ProtoReflect.Descriptor instead.
+func (*TrackShipmentRequest) Descriptor() ([]byte, []int) {
+	return file_proto_shipment_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *TrackShipmentRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type TrackShipmentResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	ShipmentId      string                 `protobuf:"bytes,1,opt,name=shipment_id,json=shipmentId,proto3" json:"shipment_id,omitempty"`
+	Status          string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	CurrentLocation *Location              `protobuf:"bytes,3,opt,name=current_location,json=currentLocation,proto3" json:"current_location,omitempty"`
+	UpdatedAt       *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *TrackShipmentResponse) Reset() {
+	*x = TrackShipmentResponse{}
+	mi := &file_proto_shipment_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TrackShipmentResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TrackShipmentResponse) ProtoMessage() {}
+
+func (x *TrackShipmentResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_shipment_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TrackShipmentResponse.ProtoReflect.Descriptor instead.
+func (*TrackShipmentResponse) Descriptor() ([]byte, []int) {
+	return file_proto_shipment_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *TrackShipmentResponse) GetShipmentId() string {
 	if x != nil {
 		return x.ShipmentId
 	}
 	return ""
 }
 
-func (x *ShipmentStatusUpdate) GetStatus() string {
+func (x *TrackShipmentResponse) GetStatus() string {
 	if x != nil {
 		return x.Status
 	}
 	return ""
 }
 
-func (x *ShipmentStatusUpdate) GetCurrentLocation() *Location {
+func (x *TrackShipmentResponse) GetCurrentLocation() *Location {
 	if x != nil {
 		return x.CurrentLocation
 	}
 	return nil
 }
 
-func (x *ShipmentStatusUpdate) GetUpdatedAt() *timestamppb.Timestamp {
+func (x *TrackShipmentResponse) GetUpdatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.UpdatedAt
 	}
@@ -646,7 +842,7 @@ const file_proto_shipment_proto_rawDesc = "" +
 	"\bLocation\x12\x10\n" +
 	"\x03lat\x18\x01 \x01(\x01R\x03lat\x12\x10\n" +
 	"\x03lng\x18\x02 \x01(\x01R\x03lng\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\"\xcf\x03\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\"\xee\x03\n" +
 	"\bShipment\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
 	"\bowner_id\x18\x02 \x01(\tR\aownerId\x12-\n" +
@@ -655,17 +851,20 @@ const file_proto_shipment_proto_rawDesc = "" +
 	"\x10current_location\x18\x05 \x01(\v2\x15.supplychain.LocationR\x0fcurrentLocation\x128\n" +
 	"\froute_points\x18\x06 \x03(\v2\x15.supplychain.LocationR\vroutePoints\x12\x16\n" +
 	"\x06status\x18\a \x01(\tR\x06status\x12\x18\n" +
-	"\acarrier\x18\b \x01(\tR\acarrier\x12G\n" +
-	"\x11estimated_arrival\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\x10estimatedArrival\x129\n" +
+	"\acarrier\x18\b \x01(\tR\acarrier\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\xfd\x01\n" +
-	"\x15CreateShipmentRequest\x12\x19\n" +
-	"\bowner_id\x18\x01 \x01(\tR\aownerId\x12-\n" +
+	"cargo_type\x18\t \x01(\tR\tcargoType\x12G\n" +
+	"\x11estimated_arrival\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\x10estimatedArrival\x129\n" +
+	"\n" +
+	"created_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\x81\x02\n" +
+	"\x15CreateShipmentRequest\x12-\n" +
 	"\x06origin\x18\x02 \x01(\v2\x15.supplychain.LocationR\x06origin\x127\n" +
 	"\vdestination\x18\x03 \x01(\v2\x15.supplychain.LocationR\vdestination\x12\x18\n" +
-	"\acarrier\x18\x04 \x01(\tR\acarrier\x12G\n" +
-	"\x11estimated_arrival\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x10estimatedArrival\"$\n" +
+	"\acarrier\x18\x04 \x01(\tR\acarrier\x12\x1d\n" +
+	"\n" +
+	"cargo_type\x18\x05 \x01(\tR\tcargoType\x12G\n" +
+	"\x11estimated_arrival\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\x10estimatedArrival\"$\n" +
 	"\x12GetShipmentRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x81\x01\n" +
 	"\x15UpdateShipmentRequest\x12\x0e\n" +
@@ -676,26 +875,42 @@ const file_proto_shipment_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"L\n" +
 	"\x16DeleteShipmentResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"I\n" +
-	"\x14ListShipmentsRequest\x12\x19\n" +
-	"\bowner_id\x18\x01 \x01(\tR\aownerId\x12\x16\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\".\n" +
+	"\x14ListShipmentsRequest\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\tR\x06status\"L\n" +
 	"\x15ListShipmentsResponse\x123\n" +
-	"\tshipments\x18\x01 \x03(\v2\x15.supplychain.ShipmentR\tshipments\"\xcc\x01\n" +
-	"\x14ShipmentStatusUpdate\x12\x1f\n" +
+	"\tshipments\x18\x01 \x03(\v2\x15.supplychain.ShipmentR\tshipments\"\xb7\x02\n" +
+	"\x12PredictRiskRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12)\n" +
+	"\x10weather_severity\x18\x02 \x01(\x01R\x0fweatherSeverity\x12'\n" +
+	"\x0ftraffic_density\x18\x03 \x01(\x01R\x0etrafficDensity\x12)\n" +
+	"\x10route_congestion\x18\x04 \x01(\x01R\x0frouteCongestion\x12-\n" +
+	"\x12distance_remaining\x18\x05 \x01(\x01R\x11distanceRemaining\x12\x1e\n" +
+	"\vtime_of_day\x18\x06 \x01(\x01R\ttimeOfDay\x12\x1e\n" +
+	"\vday_of_week\x18\a \x01(\x01R\tdayOfWeek\x12#\n" +
+	"\rvehicle_speed\x18\b \x01(\x01R\fvehicleSpeed\"S\n" +
+	"\x13PredictRiskResponse\x12\x1d\n" +
+	"\n" +
+	"risk_score\x18\x01 \x01(\x01R\triskScore\x12\x1d\n" +
+	"\n" +
+	"risk_level\x18\x02 \x01(\tR\triskLevel\"&\n" +
+	"\x14TrackShipmentRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"\xcd\x01\n" +
+	"\x15TrackShipmentResponse\x12\x1f\n" +
 	"\vshipment_id\x18\x01 \x01(\tR\n" +
 	"shipmentId\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\tR\x06status\x12@\n" +
 	"\x10current_location\x18\x03 \x01(\v2\x15.supplychain.LocationR\x0fcurrentLocation\x129\n" +
 	"\n" +
-	"updated_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt2\xfc\x03\n" +
+	"updated_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt2\xd1\x04\n" +
 	"\x0fShipmentService\x12K\n" +
 	"\x0eCreateShipment\x12\".supplychain.CreateShipmentRequest\x1a\x15.supplychain.Shipment\x12E\n" +
 	"\vGetShipment\x12\x1f.supplychain.GetShipmentRequest\x1a\x15.supplychain.Shipment\x12K\n" +
 	"\x0eUpdateShipment\x12\".supplychain.UpdateShipmentRequest\x1a\x15.supplychain.Shipment\x12Y\n" +
 	"\x0eDeleteShipment\x12\".supplychain.DeleteShipmentRequest\x1a#.supplychain.DeleteShipmentResponse\x12V\n" +
-	"\rListShipments\x12!.supplychain.ListShipmentsRequest\x1a\".supplychain.ListShipmentsResponse\x12U\n" +
-	"\rTrackShipment\x12\x1f.supplychain.GetShipmentRequest\x1a!.supplychain.ShipmentStatusUpdate0\x01B\bZ\x06gen/pbb\x06proto3"
+	"\rListShipments\x12!.supplychain.ListShipmentsRequest\x1a\".supplychain.ListShipmentsResponse\x12P\n" +
+	"\vPredictRisk\x12\x1f.supplychain.PredictRiskRequest\x1a .supplychain.PredictRiskResponse\x12X\n" +
+	"\rTrackShipment\x12!.supplychain.TrackShipmentRequest\x1a\".supplychain.TrackShipmentResponse0\x01B\bZ\x06gen/pbb\x06proto3"
 
 var (
 	file_proto_shipment_proto_rawDescOnce sync.Once
@@ -709,7 +924,7 @@ func file_proto_shipment_proto_rawDescGZIP() []byte {
 	return file_proto_shipment_proto_rawDescData
 }
 
-var file_proto_shipment_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_proto_shipment_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_proto_shipment_proto_goTypes = []any{
 	(*Location)(nil),               // 0: supplychain.Location
 	(*Shipment)(nil),               // 1: supplychain.Shipment
@@ -720,37 +935,42 @@ var file_proto_shipment_proto_goTypes = []any{
 	(*DeleteShipmentResponse)(nil), // 6: supplychain.DeleteShipmentResponse
 	(*ListShipmentsRequest)(nil),   // 7: supplychain.ListShipmentsRequest
 	(*ListShipmentsResponse)(nil),  // 8: supplychain.ListShipmentsResponse
-	(*ShipmentStatusUpdate)(nil),   // 9: supplychain.ShipmentStatusUpdate
-	(*timestamppb.Timestamp)(nil),  // 10: google.protobuf.Timestamp
+	(*PredictRiskRequest)(nil),     // 9: supplychain.PredictRiskRequest
+	(*PredictRiskResponse)(nil),    // 10: supplychain.PredictRiskResponse
+	(*TrackShipmentRequest)(nil),   // 11: supplychain.TrackShipmentRequest
+	(*TrackShipmentResponse)(nil),  // 12: supplychain.TrackShipmentResponse
+	(*timestamppb.Timestamp)(nil),  // 13: google.protobuf.Timestamp
 }
 var file_proto_shipment_proto_depIdxs = []int32{
 	0,  // 0: supplychain.Shipment.origin:type_name -> supplychain.Location
 	0,  // 1: supplychain.Shipment.destination:type_name -> supplychain.Location
 	0,  // 2: supplychain.Shipment.current_location:type_name -> supplychain.Location
 	0,  // 3: supplychain.Shipment.route_points:type_name -> supplychain.Location
-	10, // 4: supplychain.Shipment.estimated_arrival:type_name -> google.protobuf.Timestamp
-	10, // 5: supplychain.Shipment.created_at:type_name -> google.protobuf.Timestamp
+	13, // 4: supplychain.Shipment.estimated_arrival:type_name -> google.protobuf.Timestamp
+	13, // 5: supplychain.Shipment.created_at:type_name -> google.protobuf.Timestamp
 	0,  // 6: supplychain.CreateShipmentRequest.origin:type_name -> supplychain.Location
 	0,  // 7: supplychain.CreateShipmentRequest.destination:type_name -> supplychain.Location
-	10, // 8: supplychain.CreateShipmentRequest.estimated_arrival:type_name -> google.protobuf.Timestamp
+	13, // 8: supplychain.CreateShipmentRequest.estimated_arrival:type_name -> google.protobuf.Timestamp
 	0,  // 9: supplychain.UpdateShipmentRequest.current_location:type_name -> supplychain.Location
 	1,  // 10: supplychain.ListShipmentsResponse.shipments:type_name -> supplychain.Shipment
-	0,  // 11: supplychain.ShipmentStatusUpdate.current_location:type_name -> supplychain.Location
-	10, // 12: supplychain.ShipmentStatusUpdate.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 11: supplychain.TrackShipmentResponse.current_location:type_name -> supplychain.Location
+	13, // 12: supplychain.TrackShipmentResponse.updated_at:type_name -> google.protobuf.Timestamp
 	2,  // 13: supplychain.ShipmentService.CreateShipment:input_type -> supplychain.CreateShipmentRequest
 	3,  // 14: supplychain.ShipmentService.GetShipment:input_type -> supplychain.GetShipmentRequest
 	4,  // 15: supplychain.ShipmentService.UpdateShipment:input_type -> supplychain.UpdateShipmentRequest
 	5,  // 16: supplychain.ShipmentService.DeleteShipment:input_type -> supplychain.DeleteShipmentRequest
 	7,  // 17: supplychain.ShipmentService.ListShipments:input_type -> supplychain.ListShipmentsRequest
-	3,  // 18: supplychain.ShipmentService.TrackShipment:input_type -> supplychain.GetShipmentRequest
-	1,  // 19: supplychain.ShipmentService.CreateShipment:output_type -> supplychain.Shipment
-	1,  // 20: supplychain.ShipmentService.GetShipment:output_type -> supplychain.Shipment
-	1,  // 21: supplychain.ShipmentService.UpdateShipment:output_type -> supplychain.Shipment
-	6,  // 22: supplychain.ShipmentService.DeleteShipment:output_type -> supplychain.DeleteShipmentResponse
-	8,  // 23: supplychain.ShipmentService.ListShipments:output_type -> supplychain.ListShipmentsResponse
-	9,  // 24: supplychain.ShipmentService.TrackShipment:output_type -> supplychain.ShipmentStatusUpdate
-	19, // [19:25] is the sub-list for method output_type
-	13, // [13:19] is the sub-list for method input_type
+	9,  // 18: supplychain.ShipmentService.PredictRisk:input_type -> supplychain.PredictRiskRequest
+	11, // 19: supplychain.ShipmentService.TrackShipment:input_type -> supplychain.TrackShipmentRequest
+	1,  // 20: supplychain.ShipmentService.CreateShipment:output_type -> supplychain.Shipment
+	1,  // 21: supplychain.ShipmentService.GetShipment:output_type -> supplychain.Shipment
+	1,  // 22: supplychain.ShipmentService.UpdateShipment:output_type -> supplychain.Shipment
+	6,  // 23: supplychain.ShipmentService.DeleteShipment:output_type -> supplychain.DeleteShipmentResponse
+	8,  // 24: supplychain.ShipmentService.ListShipments:output_type -> supplychain.ListShipmentsResponse
+	10, // 25: supplychain.ShipmentService.PredictRisk:output_type -> supplychain.PredictRiskResponse
+	12, // 26: supplychain.ShipmentService.TrackShipment:output_type -> supplychain.TrackShipmentResponse
+	20, // [20:27] is the sub-list for method output_type
+	13, // [13:20] is the sub-list for method input_type
 	13, // [13:13] is the sub-list for extension type_name
 	13, // [13:13] is the sub-list for extension extendee
 	0,  // [0:13] is the sub-list for field type_name
@@ -767,7 +987,7 @@ func file_proto_shipment_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_shipment_proto_rawDesc), len(file_proto_shipment_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
